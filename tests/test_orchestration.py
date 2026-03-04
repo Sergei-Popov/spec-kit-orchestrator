@@ -21,6 +21,7 @@ from specify_cli import (
     _install_orchestrate_commands,
     ORCHESTRATE_COMMANDS,
     ORCHESTRATE_TEMPLATE_FILES,
+    ORCH_PROMPT_INIT,
     app,
 )
 
@@ -263,3 +264,11 @@ class TestEmbeddedContentWrittenWithoutTemplateFiles:
         assert len(list((project_dir / ".specify" / "orchestrator" / "agents").glob("*.md"))) == 5
         assert len(list((project_dir / ".github" / "agents").glob("speckit.orchestrate-*.agent.md"))) == 3
         assert len(list((project_dir / ".github" / "prompts").glob("speckit.orchestrate-*.prompt.md"))) == 3
+
+
+class TestOrchestrateInitDynamicAgentInstructions:
+    def test_prompt_includes_dynamic_agent_handoff_requirements(self):
+        assert 'label: "↩ Return to Orchestrator"' in ORCH_PROMPT_INIT
+        assert 'label: "🧪 Run Tests"' in ORCH_PROMPT_INIT
+        assert 'label: "🔍 Request Review"' in ORCH_PROMPT_INIT
+        assert 'label: "⚙ Send Fixes to Code Backend"' in ORCH_PROMPT_INIT

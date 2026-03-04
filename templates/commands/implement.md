@@ -1,5 +1,10 @@
 ---
 description: Execute the implementation plan by processing and executing all tasks defined in tasks.md
+handoffs:
+  - label: "🤖 Switch to Orchestration"
+    agent: speckit.orchestrate-init
+    prompt: "I want to switch to multi-agent orchestration for the remaining tasks. Analyze what's already been done and set up a coordination plan for the remaining work."
+    send: false
 scripts:
   sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
   ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks

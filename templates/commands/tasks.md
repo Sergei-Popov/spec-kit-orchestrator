@@ -9,6 +9,10 @@ handoffs:
     agent: speckit.implement
     prompt: Start the implementation in phases
     send: true
+  - label: "🤖 Orchestrate (Multi-Agent)"
+    agent: speckit.orchestrate-init
+    prompt: "Set up multi-agent orchestration for this feature. Read the tasks.md I just generated and create a coordination plan with work packages assigned to specialized agents."
+    send: false
 scripts:
   sh: scripts/bash/check-prerequisites.sh --json
   ps: scripts/powershell/check-prerequisites.ps1 -Json

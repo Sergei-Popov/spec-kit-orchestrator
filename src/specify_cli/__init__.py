@@ -2960,6 +2960,15 @@ ORCH_AGENT_INIT = """\
 ---
 description: "Orchestrator Agent — analyzes project requirements, activates a specialized agent team, and generates all spec-kit artifacts (constitution, spec, plan, tasks, coordination plan) in a single workflow"
 mode: speckit.orchestrate-init
+handoffs:
+  - label: "▶ Run Orchestration"
+    agent: speckit.orchestrate-run
+    prompt: "Execute the coordination plan from agent-coordination.yml. Start from Phase 1 and delegate work packages to sub-agents."
+    send: false
+  - label: "📊 Check Status"
+    agent: speckit.orchestrate-status
+    prompt: "Show the current orchestration status."
+    send: false
 ---
 
 # Orchestrator Agent — Project Initialization
@@ -3045,7 +3054,34 @@ CUSTOMIZED agent files in `.github/agents/` for THIS specific project:
 - `orchestrate-test.agent.md` — with testing framework and conventions
 - `orchestrate-review.agent.md` — with constitution principles and acceptance criteria
 
-Each file must have proper frontmatter matching the format from Step 1.
+Each file must have proper frontmatter matching the format from Step 1, including
+the following handoffs in YAML frontmatter:
+
+- `orchestrate-architect.agent.md`
+  - ↩ Return to Orchestrator → `speckit.orchestrate-run` with architect completion summary
+  - 📊 Check Status → `speckit.orchestrate-status`
+- `orchestrate-code-backend.agent.md`
+  - ↩ Return to Orchestrator → `speckit.orchestrate-run` with modified files summary
+  - 🧪 Run Tests → `orchestrate-test`
+  - 📊 Check Status → `speckit.orchestrate-status`
+- `orchestrate-code-frontend.agent.md`
+  - ↩ Return to Orchestrator → `speckit.orchestrate-run` with modified files summary
+  - 🧪 Run Tests → `orchestrate-test`
+  - 📊 Check Status → `speckit.orchestrate-status`
+- `orchestrate-code-infra.agent.md`
+  - ↩ Return to Orchestrator → `speckit.orchestrate-run`
+  - 📊 Check Status → `speckit.orchestrate-status`
+- `orchestrate-test.agent.md`
+  - ↩ Return to Orchestrator → `speckit.orchestrate-run` with test results summary
+  - 🔍 Request Review → `orchestrate-review`
+  - 📊 Check Status → `speckit.orchestrate-status`
+- `orchestrate-review.agent.md`
+  - ↩ Return to Orchestrator → `speckit.orchestrate-run` with review verdict
+  - ⚙ Send Fixes to Code Backend → `orchestrate-code-backend`
+  - 🎨 Send Fixes to Code Frontend → `orchestrate-code-frontend`
+  - 📊 Check Status → `speckit.orchestrate-status`
+
+Use `send: false` for all these handoffs so users can review and adjust prompts before sending.
 
 ### Step 8 — Present Summary
 
@@ -3088,6 +3124,35 @@ ORCH_AGENT_RUN = """\
 ---
 description: "Orchestration Runner — executes the coordination plan by delegating work packages to specialized sub-agents phase by phase"
 mode: speckit.orchestrate-run
+handoffs:
+  - label: "🏗 Delegate to Architect"
+    agent: orchestrate-architect
+    prompt: "Review the architecture and data model for the current feature. Read specs/{feature}/plan.md and constitution.md, then produce your review."
+    send: false
+  - label: "⚙ Delegate to Code Backend"
+    agent: orchestrate-code-backend
+    prompt: "Execute your assigned work package. Read specs/{feature}/agent-coordination.yml for your tasks, then implement them following plan.md."
+    send: false
+  - label: "🎨 Delegate to Code Frontend"
+    agent: orchestrate-code-frontend
+    prompt: "Execute your assigned work package. Read specs/{feature}/agent-coordination.yml for your tasks, then implement them following plan.md."
+    send: false
+  - label: "🏗 Delegate to Code Infra"
+    agent: orchestrate-code-infra
+    prompt: "Execute your assigned work package. Read specs/{feature}/agent-coordination.yml for your tasks, then implement them following plan.md."
+    send: false
+  - label: "🧪 Delegate to Test Agent"
+    agent: orchestrate-test
+    prompt: "Generate and run tests for completed work packages. Read specs/{feature}/spec.md for acceptance criteria and plan.md for testing conventions."
+    send: false
+  - label: "🔍 Delegate to Review Agent"
+    agent: orchestrate-review
+    prompt: "Review all completed work packages. Check against specs/{feature}/spec.md and constitution.md. Issue APPROVE or REQUEST_CHANGES verdict."
+    send: false
+  - label: "📊 Check Status"
+    agent: speckit.orchestrate-status
+    prompt: "Show the current orchestration status."
+    send: false
 ---
 
 # Orchestrator Agent — Execution
@@ -3210,6 +3275,15 @@ ORCH_AGENT_STATUS = """\
 ---
 description: "Orchestration Status — displays current progress of the orchestrated development workflow (read-only)"
 mode: speckit.orchestrate-status
+handoffs:
+  - label: "▶ Continue Execution"
+    agent: speckit.orchestrate-run
+    prompt: "Resume orchestration from where we left off. Read orchestrator-state.yml and continue from the next pending work package."
+    send: false
+  - label: "🔄 Re-initialize"
+    agent: speckit.orchestrate-init
+    prompt: "Re-initialize the orchestration setup for the current feature."
+    send: false
 ---
 
 # Orchestrator Agent — Status View
@@ -3347,6 +3421,18 @@ Customize with:
 - The specific data model entities
 - The specific API contracts
 - Reference to constitution.md location
+Include this exact frontmatter handoff block:
+```yaml
+handoffs:
+  - label: "↩ Return to Orchestrator"
+    agent: speckit.orchestrate-run
+    prompt: "Architect review complete. Here are the findings: [paste review summary]. Proceed to the next work package."
+    send: false
+  - label: "📊 Check Status"
+    agent: speckit.orchestrate-status
+    prompt: "Show the current orchestration status."
+    send: false
+```
 
 ### `.github/agents/orchestrate-code-backend.agent.md`
 (Only create if the project has a backend domain)
@@ -3357,6 +3443,22 @@ Customize with:
 - The specific work packages assigned to code-backend
 - List of tasks with (create:) and (update:) markers
 - Testing command to run after each task
+Include this exact frontmatter handoff block:
+```yaml
+handoffs:
+  - label: "↩ Return to Orchestrator"
+    agent: speckit.orchestrate-run
+    prompt: "Work package complete. Files created/modified: [list files]. All tasks done. Proceed to the next work package."
+    send: false
+  - label: "🧪 Run Tests"
+    agent: orchestrate-test
+    prompt: "Run tests for the backend work package I just completed. Check the files I modified."
+    send: false
+  - label: "📊 Check Status"
+    agent: speckit.orchestrate-status
+    prompt: "Show the current orchestration status."
+    send: false
+```
 
 ### `.github/agents/orchestrate-code-frontend.agent.md`
 (Only create if the project has a frontend domain)
@@ -3366,6 +3468,22 @@ Customize with:
 - Frontend file paths (e.g., "Your files are in client/ or frontend/")
 - The specific work packages assigned to code-frontend
 - Testing command
+Include this exact frontmatter handoff block:
+```yaml
+handoffs:
+  - label: "↩ Return to Orchestrator"
+    agent: speckit.orchestrate-run
+    prompt: "Work package complete. Files created/modified: [list files]. All tasks done. Proceed to the next work package."
+    send: false
+  - label: "🧪 Run Tests"
+    agent: orchestrate-test
+    prompt: "Run tests for the frontend work package I just completed. Check the files I modified."
+    send: false
+  - label: "📊 Check Status"
+    agent: speckit.orchestrate-status
+    prompt: "Show the current orchestration status."
+    send: false
+```
 
 ### `.github/agents/orchestrate-code-infra.agent.md`
 (Only create if the project has infrastructure/DevOps tasks)
@@ -3373,6 +3491,18 @@ Take the base from `.specify/orchestrator/agents/code.md`.
 Customize with:
 - Infrastructure tooling (e.g., "You write Dockerfiles, docker-compose.yml, nginx configs")
 - The specific work packages assigned to code-infra
+Include this exact frontmatter handoff block:
+```yaml
+handoffs:
+  - label: "↩ Return to Orchestrator"
+    agent: speckit.orchestrate-run
+    prompt: "Infrastructure work package complete. Files created/modified: [list files]. Proceed to the next work package."
+    send: false
+  - label: "📊 Check Status"
+    agent: speckit.orchestrate-status
+    prompt: "Show the current orchestration status."
+    send: false
+```
 
 ### `.github/agents/orchestrate-test.agent.md`
 Take the base from `.specify/orchestrator/agents/test.md`.
@@ -3380,6 +3510,22 @@ Customize with:
 - Testing framework from plan.md (e.g., "Use Vitest for unit, Supertest for API")
 - Test file location convention
 - Coverage threshold from orchestrator-config.yml
+Include this exact frontmatter handoff block:
+```yaml
+handoffs:
+  - label: "↩ Return to Orchestrator"
+    agent: speckit.orchestrate-run
+    prompt: "Test results: [pass/fail counts, coverage]. Proceed to the next work package or review phase."
+    send: false
+  - label: "🔍 Request Review"
+    agent: orchestrate-review
+    prompt: "Tests are passing. Please review the completed implementation for quality and spec compliance."
+    send: false
+  - label: "📊 Check Status"
+    agent: speckit.orchestrate-status
+    prompt: "Show the current orchestration status."
+    send: false
+```
 
 ### `.github/agents/orchestrate-review.agent.md`
 Take the base from `.specify/orchestrator/agents/review.md`.
@@ -3387,6 +3533,26 @@ Customize with:
 - Constitution principles summary (so the reviewer knows what to check)
 - Critical security concerns specific to this project
 - Specific acceptance criteria from spec.md
+Include this exact frontmatter handoff block:
+```yaml
+handoffs:
+  - label: "↩ Return to Orchestrator"
+    agent: speckit.orchestrate-run
+    prompt: "Review verdict: [APPROVE/REQUEST_CHANGES]. Findings: [summary]. Proceed accordingly."
+    send: false
+  - label: "⚙ Send Fixes to Code Backend"
+    agent: orchestrate-code-backend
+    prompt: "Review findings require fixes. Here are the issues to address: [paste findings table]. Fix each item and report back."
+    send: false
+  - label: "🎨 Send Fixes to Code Frontend"
+    agent: orchestrate-code-frontend
+    prompt: "Review findings require fixes. Here are the issues to address: [paste findings table]. Fix each item and report back."
+    send: false
+  - label: "📊 Check Status"
+    agent: speckit.orchestrate-status
+    prompt: "Show the current orchestration status."
+    send: false
+```
 
 ## Step 8 — Update orchestrator-config.yml
 
