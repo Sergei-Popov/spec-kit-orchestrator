@@ -135,40 +135,31 @@ For detailed step-by-step instructions, see our [comprehensive guide](./spec-dri
 
 ### 🤖 Multi-Agent Orchestration (Optional)
 
-For complex features, you can distribute work across specialized AI agents instead of using single-agent `/speckit.implement`.
-
-#### Enable orchestration during project init
+Instead of manually running each `/speckit.*` command, the orchestrator manages your entire project through specialized AI agents.
 
 ```bash
 specify init my-project --ai copilot --orchestrate
 ```
 
-#### Or add it to an existing spec-kit project
+Then describe your project:
 
 ```text
-/speckit.orchestrate.init
+/speckit.orchestrate.init Build a photo album app with drag-and-drop organization,
+tile previews, and local SQLite storage. Use Vite + vanilla JS.
 ```
 
-#### Orchestrated workflow (after /speckit.tasks)
+The orchestrator will:
+
+1. **Analyze** your description and activate the right agent team
+2. **Generate** constitution, spec, plan, and tasks automatically by delegating to the Architect Agent
+3. **Present** the full development plan with work packages for your approval
+
+Then execute:
 
 ```text
-/speckit.orchestrate.init      →  Configure team and autonomy mode
-/speckit.orchestrate.assign    →  Generate work packages from tasks
-/speckit.orchestrate.run       →  Execute with sub-agents
-/speckit.orchestrate.status    →  Monitor progress (anytime)
-/speckit.orchestrate.review    →  Cross-agent review cycle
-/speckit.orchestrate.sync      →  Merge parallel agent outputs
+/speckit.orchestrate.run     →  Agents implement, test, and review
+/speckit.orchestrate.status  →  Check progress anytime
 ```
-
-**Three autonomy modes:**
-
-- **Supervised** — human approves every work package
-- **Semi-auto** — human approves each phase, agents execute within it
-- **Autonomous** — full auto with review checkpoints
-
-**Four agent roles:** Architect (architecture review, data model validation), Code (implementation, supports multiple parallel instances), Test (test generation and execution), Review (code review, spec compliance, quality gates).
-
-Orchestration is fully opt-in. Without `--orchestrate`, the standard spec-kit experience is unchanged.
 
 ## 📽️ Video Overview
 
@@ -201,7 +192,7 @@ Want to see Spec Kit in action? Watch our [video overview](https://www.youtube.c
 | [Antigravity (agy)](https://agy.ai/)                                                 | ✅      |                                                                                                                                           |
 | Generic                                                                              | ✅      | Bring your own agent — use `--ai generic --ai-commands-dir <path>` for unsupported agents                                                 |
 
-> **Note:** All agents listed above support the orchestration feature. When `--orchestrate` is used, 6 additional `/speckit.orchestrate.*` commands are installed alongside the standard commands.
+> **Note:** All agents listed above support the orchestration feature. When `--orchestrate` is used, 3 additional `/speckit.orchestrate.*` commands are installed alongside the standard commands.
 
 ## 🔧 Specify CLI Reference
 

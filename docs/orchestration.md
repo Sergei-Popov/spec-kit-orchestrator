@@ -34,27 +34,17 @@ Run the orchestration init command in your AI assistant:
 
 ## Workflow
 
-### Prerequisites
+### Orchestration commands
 
-Complete the standard spec-kit flow first:
-
-```text
-/speckit.constitution  →  Project principles
-/speckit.specify       →  Feature specification
-/speckit.plan          →  Technical plan
-/speckit.tasks         →  Task breakdown
-```
-
-### Orchestration steps
+The orchestrator manages the entire lifecycle — from specification to implementation — using 3 commands:
 
 ```text
-/speckit.orchestrate.init    →  Choose mode + team composition
-/speckit.orchestrate.assign  →  Auto-generate work packages from tasks
-/speckit.orchestrate.run     →  Execute packages per agent role
-/speckit.orchestrate.status  →  Check progress anytime
-/speckit.orchestrate.review  →  Run quality review cycle
-/speckit.orchestrate.sync    →  Merge parallel outputs
+/speckit.orchestrate.init    →  Analyze project, activate agents, generate spec + plan + tasks + coordination
+/speckit.orchestrate.run     →  Execute the coordination plan with agent role-switching
+/speckit.orchestrate.status  →  Read-only progress view (run anytime)
 ```
+
+You describe your project to `/speckit.orchestrate.init` and the orchestrator handles constitution, specification, planning, task breakdown, and implementation by delegating to specialized agents. There is no need to run the standard `/speckit.*` commands separately.
 
 ## Autonomy Modes
 
@@ -97,7 +87,6 @@ Reviews completed work packages for constitution compliance, spec compliance, co
 | File | Location | Purpose |
 |------|----------|---------|
 | `orchestrator-config.yml` | `.specify/orchestrator/` | Team and mode configuration |
-| `agent-coordination.yml` | `specs/NNN-feature/` | Work package assignments and phases |
 | `orchestrator-state.yml` | `specs/NNN-feature/` | Live execution state |
 | `orchestrator.md` | `.specify/orchestrator/agents/` | Orchestrator role prompt |
 | `architect.md` | `.specify/orchestrator/agents/` | Architect role prompt |
@@ -113,7 +102,7 @@ When `/speckit.orchestrate.run` reaches a parallel phase, it lists the work pack
 2. **Claude Code:** Open multiple terminal sessions. Run each package in its own session.
 3. **Cursor:** Use multiple composer windows.
 
-After all parallel packages complete, confirm in the orchestrator session and run `/speckit.orchestrate.sync` to merge results.
+After all parallel packages complete, confirm in the orchestrator session to continue execution.
 
 ## State Recovery
 
@@ -124,7 +113,7 @@ If your session is interrupted, orchestrator-state.yml persists on disk. Running
 | Problem | Solution |
 |---------|----------|
 | "No orchestrator config found" | Run `/speckit.orchestrate.init` first |
-| "No tasks.md found" | Complete `/speckit.tasks` before orchestrating |
+| "No tasks.md found" | Run `/speckit.orchestrate.init` with a project description first |
 | Review cycle stuck in loop | Check max_review_rounds in config, increase or escalate manually |
-| File conflicts after parallel phase | Run `/speckit.orchestrate.sync` to resolve |
+| File conflicts after parallel phase | Re-run `/speckit.orchestrate.run` to resolve |
 | State file corrupted | Delete `orchestrator-state.yml` and re-run — starts from beginning |

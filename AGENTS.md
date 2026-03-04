@@ -418,16 +418,13 @@ When adding new agents:
 
 ## Orchestration Command Support
 
-When a project is initialized with `--orchestrate`, 6 additional slash command files are installed into the agent's command directory alongside the standard 8:
+When a project is initialized with `--orchestrate`, 3 additional slash command files are installed into the agent's command directory alongside the standard 8:
 
 | Command File | Purpose |
 |-------------|---------|
-| `speckit.orchestrate.init.md` | Configure agent team and autonomy mode |
-| `speckit.orchestrate.assign.md` | Generate work packages from tasks |
-| `speckit.orchestrate.run.md` | Execute coordination plan |
-| `speckit.orchestrate.status.md` | Display orchestration progress |
-| `speckit.orchestrate.review.md` | Trigger cross-agent review cycle |
-| `speckit.orchestrate.sync.md` | Resolve conflicts from parallel agents |
+| `speckit.orchestrate.init.md` | Analyze project, activate agents, generate spec + plan + tasks + coordination |
+| `speckit.orchestrate.run.md` | Execute coordination plan with agent role-switching |
+| `speckit.orchestrate.status.md` | Read-only progress view |
 
 These files are installed by `_install_orchestrate_commands()` in `__init__.py`, which uses the same `AGENT_CONFIG` lookup pattern as standard command installation. When adding a new agent, orchestration commands will be installed automatically as long as the agent's `folder` and `commands_subdir` are correctly defined in `AGENT_CONFIG`.
 
