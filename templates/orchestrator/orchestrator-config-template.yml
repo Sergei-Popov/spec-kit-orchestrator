@@ -54,6 +54,17 @@ checkpoints:
   after_work_package: false
   before_merge: true
 
+# Provider execution capabilities (source of truth for orchestration artifacts)
+provider_capabilities:
+  subagent_types:
+    - name: general
+      description: Full tool access — reads, writes, runs commands, calls APIs
+    - name: explore
+      description: Read-only codebase research
+  task_tool: Task
+  task_id_field: task_id
+  registered_slash_commands: []
+
 # Quality gate thresholds
 quality_gates:
   min_test_coverage: 80
