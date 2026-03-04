@@ -23,6 +23,7 @@ from specify_cli import (
     ORCHESTRATE_TEMPLATE_FILES,
     ORCH_PROMPT_INIT,
     ORCH_PROMPT_RUN,
+    ORCH_AGENT_RUN,
     app,
 )
 
@@ -353,3 +354,15 @@ class TestOpenCodeOrchestrationRegression:
     def test_run_prompt_requires_task_id_resume_tracking(self):
         assert "active_task_ids" in ORCH_PROMPT_RUN
         assert "provider_capabilities.task_id_field" in ORCH_PROMPT_RUN
+
+    def test_run_prompt_forbids_manual_session_delegation(self):
+        assert "DO NOT instruct the user to open a new chat session" in ORCH_PROMPT_RUN
+
+    def test_run_prompt_supports_handoff_delegation(self):
+        assert "handoff" in ORCH_PROMPT_RUN.lower()
+
+    def test_run_agent_uses_handoff_delegation(self):
+        assert "triggering the appropriate handoff" in ORCH_AGENT_RUN
+
+    def test_run_agent_forbids_manual_session_delegation(self):
+        assert "DO NOT ask the user to open a new chat session" in ORCH_AGENT_RUN

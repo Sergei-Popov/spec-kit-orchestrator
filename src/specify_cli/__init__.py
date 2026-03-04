@@ -3275,16 +3275,21 @@ Packages: {list}  |  Type: {sequential/parallel}
 
 ### For Each Work Package — DELEGATE
 
-You MUST delegate to the sub-agent via `provider_capabilities.task_tool`
-using a provider-valid `subagent_type`.
-Include package title, task list, and required context files.
+You MUST delegate to the sub-agent by triggering the appropriate handoff
+from your agent frontmatter. Select the handoff that matches the work
+package's agent role and include the package title, task list, and required
+context files in the delegation prompt.
+
+DO NOT ask the user to open a new chat session or manually reference an agent file.
+Your handoffs handle delegation automatically.
 
 ### For Parallel Packages
 
-Launch one delegated task per package in parallel and track each returned
-task/session ID in `active_task_ids` until completion.
+Launch one delegated task per package in parallel by triggering multiple
+handoffs. Track each returned task/session ID in `active_task_ids` until
+completion.
 
-### After User Reports Completion
+### After Sub-Agent Reports Completion
 
 Update specs/{feature}/orchestrator-state.yml:
 
@@ -3317,7 +3322,7 @@ Ask: "Approve this phase and continue? (yes / adjust plan / abort)"
 
 ### After All Phases — Review
 
-Delegate to Review Agent with `provider_capabilities.task_tool`.
+Delegate to Review Agent by triggering your "🔍 Delegate to Review Agent" handoff.
 Pass completed work packages and require verdict:
 APPROVE or REQUEST_CHANGES.
 
@@ -3752,10 +3757,17 @@ TASKS: {task_list}
 ````
 
 ### 2. Delegate to the Sub-Agent
-You CANNOT do the work yourself. You MUST delegate using the tool defined by
-`provider_capabilities.task_tool` and a `subagent_type` from
-`provider_capabilities.subagent_types`.
-Read these values from `.specify/orchestrator/orchestrator-config.yml`.
+You CANNOT do the work yourself. You MUST delegate to sub-agents.
+
+**If your agent mode defines handoffs** (listed in your agent file's YAML frontmatter),
+trigger the appropriate handoff matching the work package's agent role.
+
+**Otherwise**, use the tool defined by `provider_capabilities.task_tool` with a
+`subagent_type` from `provider_capabilities.subagent_types`
+(read from `.specify/orchestrator/orchestrator-config.yml`).
+
+DO NOT instruct the user to open a new chat session or manually reference an agent file.
+You must perform the delegation yourself.
 
 Delegate with a prompt that includes:
 - work package ID and title
@@ -3763,8 +3775,8 @@ Delegate with a prompt that includes:
 - required context files (`plan.md`, `spec.md`, `constitution.md`)
 - expected completion output (`[WP-{ID}] COMPLETE — list files changed`)
 
-### 3. Wait for the User to Report Back
-After the user confirms the sub-agent completed the work package:
+### 3. Track Sub-Agent Completion
+After the sub-agent completes (via handoff return or user confirmation):
 
 - Record the result in `specs/{active_feature}/orchestrator-state.yml`
 - Update the work package status to completed
@@ -3791,12 +3803,13 @@ You MUST halt and wait for user input at each checkpoint; do not proceed autonom
 
 ### 4. Handle Parallel Packages
 If the current phase has packages marked parallel, launch one delegated task per
-package in parallel using provider-valid `subagent_type` values. Track every
-returned task/session ID in `active_task_ids` until complete.
+package in parallel by triggering multiple handoffs (or using provider-valid
+`subagent_type` values). Track every returned task/session ID in
+`active_task_ids` until complete.
 
 ### 5. After All Implementation Phases — Trigger Review
 📋 REVIEW PHASE:
-Delegate review to the review sub-agent using the configured task tool.
+Delegate review to the review sub-agent (use handoff or configured task tool).
 Provide completed work package outputs and require verdict:
 APPROVE or REQUEST_CHANGES with findings table.
 
