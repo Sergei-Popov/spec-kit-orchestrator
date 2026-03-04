@@ -199,7 +199,9 @@ class TestInstallOrchestrateCommands:
         _install_orchestrate_commands(project_dir, "copilot", script_type="ps")
         prompt_path = project_dir / ".github" / "prompts" / "speckit.orchestrate-init.prompt.md"
         content = prompt_path.read_text(encoding="utf-8")
+        assert "```powershell" in content
         assert '.specify/scripts/powershell/create-new-feature.ps1 "feature-name"' in content
+        assert 'bash .specify/scripts/powershell/create-new-feature.ps1 "feature-name"' not in content
         assert ".specify/scripts/bash/create-new-feature.sh" not in content
 
     def test_copilot_init_agent_uses_powershell_script_when_selected(self, project_dir):

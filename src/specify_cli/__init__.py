@@ -3921,7 +3921,10 @@ def _apply_orchestrate_script_type(content: str, script_type: str) -> str:
     if script_type != "ps":
         return content
 
-    pattern = r'```bash\nbash \.specify/scripts/bash/create-new-feature\.sh (?P<args>".+?")\n```'
+    # Orchestrate init templates embed a fenced block that explicitly runs:
+    # `bash .specify/scripts/bash/create-new-feature.sh ...`
+    # Rewrite only that known snippet for PowerShell projects.
+    pattern = r'```bash\nbash \.specify/scripts/bash/create-new-feature\.sh (?P<args>[^\n]+)\n```'
     replacement = r'```powershell\n.specify/scripts/powershell/create-new-feature.ps1 \g<args>\n```'
     return re.sub(pattern, replacement, content)
 
