@@ -142,7 +142,8 @@ class TestAgentPromptTemplatesInstalled:
     def test_agent_files_are_non_empty(self, project_dir):
         _install_orchestrator_templates(project_dir)
         agents_dir = project_dir / ".specify" / "orchestrator" / "agents"
-        for filename in ORCHESTRATOR_AGENT_FILES:
+        from specify_cli import ORCHESTRATOR_AGENT_CONTENT
+        for filename in ORCHESTRATOR_AGENT_CONTENT:
             content = (agents_dir / filename).read_text(encoding="utf-8")
             assert len(content) > 0, f"{filename} is empty"
 
@@ -181,11 +182,17 @@ class TestSlashCommandsCopilot:
 # ===== Test 7: slash commands installed for claude =====
 
 class TestSlashCommandsClaude:
-    def test_claude_commands_installed(self, project_dir):
+    def test_claude_agent_files_installed(self, project_dir):
         _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
-        md_files = list(commands_dir.glob("speckit.orchestrate.*.md"))
-        assert len(md_files) == 3
+        agent_files = list(commands_dir.glob("speckit.orchestrate.*.agent.md"))
+        assert len(agent_files) == 5
+
+    def test_claude_prompt_files_installed(self, project_dir):
+        _install_orchestrate_commands(project_dir, "claude")
+        commands_dir = project_dir / ".claude" / "commands"
+        prompt_files = list(commands_dir.glob("speckit.orchestrate.*.prompt.md"))
+        assert len(prompt_files) == 3
 
 
 # ===== Test 8: config template YAML is valid =====
@@ -383,3 +390,7 @@ class TestOrchestrateWithNoGit:
         assert (project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml").exists()
         assert (project_dir / ".specify" / "orchestrator" / "agents").is_dir()
         assert (project_dir / ".claude" / "commands").is_dir()
+        # Verify agent and prompt files are present
+        commands_dir = project_dir / ".claude" / "commands"
+        assert len(list(commands_dir.glob("speckit.orchestrate.*.agent.md"))) == 5
+        assert len(list(commands_dir.glob("speckit.orchestrate.*.prompt.md"))) == 3
