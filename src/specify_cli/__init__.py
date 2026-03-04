@@ -2504,22 +2504,29 @@ def _generate_orchestrator_config(project_path: Path, mode: str, team: dict, fea
         yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
 
+def _resolve_templates_dir(project_path: Path, *subpath: str) -> Path:
+    """Locate a templates subdirectory — extracted project first, then source checkout."""
+    extracted = project_path / ".specify" / "templates" / Path(*subpath)
+    if extracted.exists():
+        return extracted
+    source_root = Path(__file__).parent.parent.parent  # up from src/specify_cli/
+    return source_root / "templates" / Path(*subpath)
+
+
 def _install_orchestrator_templates(project_path: Path) -> None:
     """Copy agent prompt files from templates/orchestrator/agents/ into the project."""
     agents_dir = project_path / ".specify" / "orchestrator" / "agents"
     agents_dir.mkdir(parents=True, exist_ok=True)
 
-    # Try extracted project templates first, then fall back to source checkout
-    templates_dir = project_path / ".specify" / "templates" / "orchestrator" / "agents"
-    if not templates_dir.exists():
-        source_root = Path(__file__).parent.parent.parent  # up from src/specify_cli/
-        templates_dir = source_root / "templates" / "orchestrator" / "agents"
+    templates_dir = _resolve_templates_dir(project_path, "orchestrator", "agents")
 
     for filename in ORCHESTRATOR_AGENT_FILES:
         src = templates_dir / filename
         dst = agents_dir / filename
         if src.exists():
             shutil.copy2(src, dst)
+        else:
+            console.print(f"[yellow]Warning: orchestrator template not found: {filename}[/yellow]")
 
 
 def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
@@ -2535,17 +2542,15 @@ def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
 
     commands_dir.mkdir(parents=True, exist_ok=True)
 
-    # Try extracted project templates first, then fall back to source checkout
-    templates_dir = project_path / ".specify" / "templates" / "claude" / "commands"
-    if not templates_dir.exists():
-        source_root = Path(__file__).parent.parent.parent  # up from src/specify_cli/
-        templates_dir = source_root / "templates" / "claude" / "commands"
+    templates_dir = _resolve_templates_dir(project_path, "claude", "commands")
 
     for filename in ORCHESTRATE_TEMPLATE_FILES:
         src = templates_dir / filename
         dst = commands_dir / filename
         if src.exists():
             shutil.copy2(src, dst)
+        else:
+            console.print(f"[yellow]Warning: orchestrate command template not found: {filename}[/yellow]")
 
 
 def main():
