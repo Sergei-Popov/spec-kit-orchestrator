@@ -47,18 +47,18 @@ def project_dir(temp_dir):
 class TestOrchestrateCreatesDirectory:
     def test_orchestrator_directory_exists(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         _install_orchestrator_templates(project_dir)
         assert (project_dir / ".specify" / "orchestrator").is_dir()
 
     def test_orchestrator_config_file_exists(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         assert (project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml").exists()
 
     def test_orchestrator_agents_directory_has_five_files(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         _install_orchestrator_templates(project_dir)
         agents_dir = project_dir / ".specify" / "orchestrator" / "agents"
         assert agents_dir.is_dir()
@@ -85,22 +85,22 @@ class TestNoOrchestrateNoDirectory:
 class TestOrchestratorConfigValid:
     def test_config_has_required_keys(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        for key in ("feature", "mode", "agents", "checkpoints", "quality_gates"):
+        for key in ("feature", "agents", "checkpoints", "quality_gates"):
             assert key in data, f"Missing required key: {key}"
 
-    def test_config_mode_is_valid(self, project_dir):
+    def test_config_does_not_include_mode(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "semi-auto", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        assert data["mode"] in ("supervised", "semi-auto", "autonomous")
+        assert "mode" not in data
 
     def test_config_agents_contains_required_roles(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         for role in ("architect", "code", "test", "review"):
@@ -112,14 +112,14 @@ class TestOrchestratorConfigValid:
 class TestOrchestratorConfigAgentCounts:
     def test_code_agent_count_respected(self, project_dir):
         team = {"architect": 1, "code": 2, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert data["agents"]["code"]["count"] == 2
 
     def test_architect_always_one(self, project_dir):
         team = {"architect": 1, "code": 2, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert data["agents"]["architect"]["count"] == 1
@@ -210,29 +210,19 @@ class TestConfigTemplateYaml:
     def test_template_has_expected_keys(self):
         template_path = REPO_ROOT / "templates" / "orchestrator" / "orchestrator-config-template.yml"
         data = yaml.safe_load(template_path.read_text(encoding="utf-8"))
-        for key in ("feature", "mode", "agents", "checkpoints", "quality_gates"):
+        for key in ("feature", "agents", "checkpoints", "quality_gates"):
             assert key in data, f"Template missing key: {key}"
 
 
-# ===== Test 9: mode selection validates input =====
+# ===== Test 9: config generation behavior =====
 
-class TestModeValidation:
-    @pytest.mark.parametrize("mode", ["supervised", "semi-auto", "autonomous"])
-    def test_accepted_modes_produce_valid_config(self, project_dir, mode):
+class TestConfigValidation:
+    def test_generated_config_has_no_mode_key(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, mode, team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        assert data["mode"] == mode
-
-    def test_invalid_mode_stored_as_is(self, project_dir):
-        # _generate_orchestrator_config does not validate the mode string;
-        # it is the caller's responsibility.  Verify no crash.
-        team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "invalid-mode", team)
-        config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
-        data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        assert data["mode"] == "invalid-mode"
+        assert "mode" not in data
 
 
 # ===== Test 10: existing tests still pass (regression guard) =====
@@ -263,7 +253,6 @@ class TestAtomicWriteState:
     def test_write_state_produces_valid_yaml(self, project_dir):
         state = {
             "feature": "test-feature",
-            "mode": "supervised",
             "current_phase": "planning",
             "work_packages": [],
         }
@@ -282,7 +271,7 @@ class TestAtomicWriteState:
         assert loaded["feature"] == "test-feature"
 
     def test_no_tmp_files_remain(self, project_dir):
-        state = {"feature": "f", "mode": "supervised", "current_phase": "planning", "work_packages": []}
+        state = {"feature": "f", "current_phase": "planning", "work_packages": []}
         state_dir = project_dir / ".specify" / "orchestrator"
         state_dir.mkdir(parents=True, exist_ok=True)
         state_path = state_dir / "orchestrator-state.yml"
@@ -324,7 +313,6 @@ class TestOrchestratorStateSchema:
     def test_minimal_valid_state(self, project_dir):
         state = {
             "feature": "my-feature",
-            "mode": "supervised",
             "current_phase": "planning",
             "work_packages": [],
         }
@@ -335,8 +323,9 @@ class TestOrchestratorStateSchema:
             yaml.dump(state, f, default_flow_style=False, sort_keys=False)
 
         loaded = yaml.safe_load(state_path.read_text(encoding="utf-8"))
-        for key in ("feature", "mode", "current_phase", "work_packages"):
+        for key in ("feature", "current_phase", "work_packages"):
             assert key in loaded, f"Missing required state key: {key}"
+        assert "mode" not in loaded
 
 
 # ===== Test 14: agent-coordination.yml schema validation =====
@@ -385,7 +374,7 @@ class TestOrchestrateWithNoGit:
     def test_orchestration_files_without_git(self, project_dir):
         # Orchestration helpers do not require git — verify no .git created
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         _install_orchestrator_templates(project_dir)
         _install_orchestrate_commands(project_dir, "claude")
 

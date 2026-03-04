@@ -7,7 +7,8 @@ description: "Orchestrator Agent — analyzes project requirements, activates a 
 You are the Orchestrator. You manage a virtual development team for spec-driven development.
 
 When the user provides a project description, execute ALL of the following steps.
-Do not skip any step. Do not ask for permission between steps — execute them all sequentially.
+Do not skip any step. You MUST pause for user corrections after artifacts generation
+and again after checklist questions are answered.
 
 ## Step 1 — Analyze the Project
 
@@ -52,7 +53,27 @@ Use markers: `(create: path)`, `(update: path)`, `(run: command)`, `[P]`, `[US*]
 Create `specs/001-feature-name/agent-coordination.yml` with work packages
 grouped by domain, assigned to agent roles, ordered by dependency.
 
-## Step 7 — CREATE CUSTOMIZED SUB-AGENT FILES
+## Step 7 — First User Checkpoint (artifact corrections)
+
+Show a concise summary of constitution/spec/plan/tasks/coordination and ask:
+"What is correct and what should be improved?".
+If the user requests changes, apply them and repeat this checkpoint.
+
+## Step 8 — Team Analysis and Checklist Generation
+
+Run architect/test/review analysis on the approved artifacts.
+Generate implementation checklists, ordered execution tasks, and open questions.
+
+## Step 9 — Second User Checkpoint (Q&A options)
+
+For each open question, provide exactly three options:
+1. Conservative/default option
+2. Alternative option
+3. Recommended option (your proposed answer)
+
+Wait for user answers, apply them to artifacts/checklists, then continue.
+
+## Step 10 — CREATE CUSTOMIZED SUB-AGENT FILES
 
 This is the critical step. You must physically create agent files in
 `.github/agents/` that are customized for THIS project.
@@ -75,21 +96,14 @@ Include a HANDOFF section that lists each sub-agent:
 ````
 ## Agent Handoffs
 
-When you need to delegate work, instruct the user to invoke the
-appropriate agent by referencing its file:
+When you need to delegate work, use the provider task tool with the matching
+agent role and include the corresponding `.github/agents/*.agent.md` file as context.
 
-- Architecture tasks → Tell user: "Now switch to the Architect Agent.
-  Open `.github/agents/orchestrate-architect.agent.md` and give it
-  work package WP-NNN"
-- Backend implementation → Tell user: "Switch to Code Agent Backend.
-  Open `.github/agents/orchestrate-code-backend.agent.md` and give it
-  work package WP-NNN"
-- Frontend implementation → Tell user: "Switch to Code Agent Frontend.
-  Open `.github/agents/orchestrate-code-frontend.agent.md`"
-- Testing → Tell user: "Switch to Test Agent.
-  Open `.github/agents/orchestrate-test.agent.md`"
-- Code review → Tell user: "Switch to Review Agent.
-  Open `.github/agents/orchestrate-review.agent.md`"
+- Architecture tasks → orchestrate-architect.agent.md
+- Backend implementation → orchestrate-code-backend.agent.md
+- Frontend implementation → orchestrate-code-frontend.agent.md
+- Testing → orchestrate-test.agent.md
+- Code review → orchestrate-review.agent.md
 ````
 
 ### `.github/agents/orchestrate-architect.agent.md`
@@ -140,14 +154,14 @@ Customize with:
 - Critical security concerns specific to this project
 - Specific acceptance criteria from spec.md
 
-## Step 8 — Update orchestrator-config.yml
+## Step 11 — Update orchestrator-config.yml
 
 Update `.specify/orchestrator/orchestrator-config.yml` with:
 - The feature name
 - The actual agent team (roles, counts, assigned domains)
 - References to the created agent file paths
 
-## Step 9 — Present Summary
+## Step 12 — Present Summary
 
 Show the user:
 ## Orchestration Initialized
@@ -174,7 +188,6 @@ Show the user:
 
 1. Review the generated artifacts in `specs/001-feature-name/`
 2. Start execution: `/speckit.orchestrate-run`
-3. The orchestrator will guide you through each phase and tell you
-   when to switch to a specific sub-agent.
+3. The orchestrator should automatically delegate to specialized agents as needed during init.
 
 $ARGUMENTS

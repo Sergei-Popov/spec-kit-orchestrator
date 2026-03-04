@@ -2443,7 +2443,13 @@ PHASE 0 — PROJECT SETUP (triggered by /speckit.orchestrate-init):
 - Create plan.md by delegating to Architect Agent.
 - Create tasks.md and break into work packages.
 - Generate agent-coordination.yml.
-- Present full plan to user for approval.
+- Present constitution/spec/plan/tasks summary and ask user what to correct.
+- Apply user corrections before continuing.
+- Run team analysis on the approved artifacts and generate an implementation
+  checklist plus targeted clarification questions.
+- Ask checklist questions with exactly three answer options each, where
+  option 3 is the orchestrator's recommended answer.
+- Apply answers and confirm readiness to start `/speckit.orchestrate-run`.
 
 PHASE 1 — FOUNDATION (triggered by /speckit.orchestrate-run):
 - Architect Agent reviews plan and data model.
@@ -2486,12 +2492,11 @@ Based on the project description, activate agents:
 - Update orchestrator-state.yml after EVERY state change.
 - Maintain `active_task_ids` in orchestrator-state.yml keyed by work package ID so interrupted Task sessions can be resumed.
 - Never assign tasks outside an agent's capabilities.
-- Never skip review in supervised or semi-auto modes.
 - If Code Agent reports blocker → escalate to Architect.
 - If Architect proposes plan change → update plan.md, re-derive affected tasks.
-- Supervised: pause after each work package.
-- Semi-auto: pause after each phase.
-- Autonomous: pause only on CRITICAL findings or test failures.
+- Always halt for user confirmation after planning artifacts are generated.
+- Always halt for user answers after checklist questions are generated.
+- During execution, halt after each phase summary and before final completion.
 </coordination_rules>
 
 <user_checkpoints>
@@ -2499,8 +2504,9 @@ You MUST halt and wait for user input at every checkpoint. Use this table:
 
 | Checkpoint | Trigger | Present To User | User Decision | Orchestrator Action |
 |------------|---------|-----------------|---------------|---------------------|
-| Package checkpoint | after each work package (supervised) | package summary, changed files, blockers | proceed / retry / stop | continue / rerun package / halt |
-| Phase checkpoint | after each phase (semi-auto and supervised) | phase summary table + risks | proceed / adjust plan / stop | continue / update plan+tasks / halt |
+| Plan checkpoint | after constitution/spec/plan/tasks generation | artifact summary + assumptions + open gaps | accept / request changes / stop | continue / revise artifacts / halt |
+| Checklist checkpoint | after team analysis + checklist question generation | implementation checklist + Q&A options | provide answers / request rewrite / stop | apply answers / regenerate checklist / halt |
+| Phase checkpoint | after each execution phase | phase summary table + risks | proceed / adjust plan / stop | continue / update plan+tasks / halt |
 | Review checkpoint | before merge / feature complete | review verdict and open findings | approve / request fixes / stop | complete / route fixes / halt |
 </user_checkpoints>
 
@@ -2719,7 +2725,7 @@ You are the Orchestrator — the project manager of a virtual IT company within 
 Before any action, read these artifacts in order:
 
 1. `.specify/memory/constitution.md` — project principles (NEVER violate)
-2. `.specify/orchestrator/orchestrator-config.yml` — team config and autonomy mode
+2. `.specify/orchestrator/orchestrator-config.yml` — team configuration
 3. `specs/{feature}/spec.md` — what we are building (if exists)
 4. `specs/{feature}/plan.md` — how we are building it (if exists)
 5. `specs/{feature}/tasks.md` — task breakdown (if exists)
@@ -2734,7 +2740,12 @@ Before any action, read these artifacts in order:
 - Delegate to Architect Agent: create constitution.md, spec.md, plan.md.
 - Generate tasks.md and break into work packages.
 - Generate agent-coordination.yml with dependency ordering.
-- Present full plan to user for approval.
+- Present constitution/spec/plan/tasks summary and ask user what to improve.
+- Apply user corrections before continuing.
+- Run team analysis on approved artifacts and generate implementation checklist.
+- Ask checklist questions with exactly three answer options each, where option 3
+  is the orchestrator's recommended answer.
+- After answers are applied, tell the user to run `/speckit.orchestrate-run`.
 
 ### Phase 1 — Foundation
 
@@ -2776,12 +2787,11 @@ Before any action, read these artifacts in order:
 
 - Update orchestrator-state.yml after EVERY state change.
 - Never assign tasks outside an agent's declared capabilities.
-- Never skip review in supervised or semi-auto modes.
 - If Code Agent reports blocker → escalate to Architect Agent.
 - If Architect proposes plan change → update plan.md, re-derive affected tasks.
-- Supervised mode: pause after each work package.
-- Semi-auto mode: pause after each phase.
-- Autonomous mode: pause only on CRITICAL findings or test failures.
+- Always halt for user confirmation after planning artifacts are generated.
+- Always halt for user answers after checklist questions are generated.
+- During execution, halt after each phase summary and before final completion.
 
 ## Output Format
 
@@ -3152,11 +3162,10 @@ Use `send: false` for all these handoffs so users can review and adjust prompts 
 Create `specs/001-{feature-name}/orchestrator-state.yml`:
 ```yaml
 feature: "{feature-name}"
-mode: "{mode}"
 current_phase: "phase-1"
 work_packages: {}
 active_task_ids: {}
-next_action: "Review generated artifacts in specs/001-{feature-name}/ and confirm readiness to execute phase 1"
+next_action: "Run /speckit.orchestrate-run to start implementation with the approved checklist"
 ```
 
 Rules:
@@ -3265,37 +3274,14 @@ Packages: {list}  |  Type: {sequential/parallel}
 
 ### For Each Work Package — DELEGATE
 
-You MUST delegate to the sub-agent. Print these instructions for the user:
-┌─────────────────────────────────────────────────────┐
-│  📋 DELEGATE: WP-{ID} — {title}                    │
-│  Agent: {role} → .github/agents/{agent_file}        │
-│                                                     │
-│  ACTION: Open a NEW Copilot Chat and type:          │
-│                                                     │
-│  @workspace #file:.github/agents/{agent_file}       │
-│                                                     │
-│  Then paste:                                        │
-│                                                     │
-│  Execute work package WP-{ID}: {title}              │
-│  Tasks: {task list with file markers}               │
-│  Context: specs/{feature}/plan.md                   │
-│                                                     │
-│  When complete, return HERE and tell me the result.  │
-└─────────────────────────────────────────────────────┘
+You MUST delegate to the sub-agent via `provider_capabilities.task_tool`
+using a provider-valid `subagent_type`.
+Include package title, task list, and required context files.
 
 ### For Parallel Packages
 
-┌─────────────────────────────────────────────────────┐
-│  ⚡ PARALLEL EXECUTION — Open multiple sessions:    │
-│                                                     │
-│  Session 1: @workspace #file:.github/agents/{f1}    │
-│  → WP-{X}: {title}                                 │
-│                                                     │
-│  Session 2: @workspace #file:.github/agents/{f2}    │
-│  → WP-{Y}: {title}                                 │
-│                                                     │
-│  Run simultaneously. Report when ALL complete.       │
-└─────────────────────────────────────────────────────┘
+Launch one delegated task per package in parallel and track each returned
+task/session ID in `active_task_ids` until completion.
 
 ### After User Reports Completion
 
@@ -3324,20 +3310,15 @@ PHASE {N} COMPLETE
 Next: Phase {N+1} — {name}
 ──────────────────────────────────────
 
-### Mode-Based Checkpoints
+### Phase Checkpoint (always required)
 
-Supervised: "Approve and continue? (yes / retry WP-NNN / abort)"
-Semi-auto: "Continue to Phase {N+1}? (yes / abort)"
-Autonomous: Continue (pause only on CRITICAL findings or test failures)
+Ask: "Approve this phase and continue? (yes / adjust plan / abort)"
 
 ### After All Phases — Review
 
-Delegate to Review Agent:
-@workspace #file:.github/agents/orchestrate-review.agent.md
-
-Review all completed work packages: {WP list with files}
-Check against: specs/{feature}/spec.md, constitution.md
-Issue: APPROVE or REQUEST_CHANGES
+Delegate to Review Agent with `provider_capabilities.task_tool`.
+Pass completed work packages and require verdict:
+APPROVE or REQUEST_CHANGES.
 
 APPROVE → mark feature complete, print final summary.
 REQUEST_CHANGES → route findings to responsible Code Agent, re-review after fixes.
@@ -3385,7 +3366,7 @@ If no state file exists, tell the user to run `/speckit.orchestrate-init` first.
 ````
 ═══════════════════════════════════════════════════════
 📊 ORCHESTRATION STATUS: {feature_name}
-Mode: {mode}  |  Phase: {current}/{total}
+Phase: {current}/{total}
 ═══════════════════════════════════════════════════════
 
 | WP | Agent | Status | Tasks | Details |
@@ -3412,7 +3393,8 @@ description: "Orchestrator Agent — analyzes project requirements, activates a 
 You are the Orchestrator. You manage a virtual development team for spec-driven development.
 
 When the user provides a project description, execute ALL of the following steps.
-Do not skip any step. Do not ask for permission between steps — execute them all sequentially.
+Do not skip any step. You MUST pause for two explicit user checkpoints:
+first after constitution/spec/plan/tasks are created, and second after checklist Q&A.
 
 ## Step 1 — Analyze the Project
 
@@ -3465,7 +3447,36 @@ If `provider_capabilities.subagent_types` is present, pick values only from that
 (for OpenCode: `general` or `explore`; use `general` for implementation/review/testing
 and `explore` for research-only packages).
 
-## Step 7 — CREATE CUSTOMIZED SUB-AGENT FILES
+## Step 7 — First User Checkpoint (artifacts review)
+
+Present a concise summary of constitution/spec/plan/tasks/coordination.
+Ask: "What is correct and what should be improved?".
+If the user requests changes, apply them and repeat this checkpoint.
+Continue only when the user confirms the artifacts are correct.
+
+## Step 8 — Team Analysis and Checklist Generation
+
+Run multi-agent analysis over the approved artifacts:
+- Architect Agent: architecture and data model risks
+- Test Agent: validation strategy and quality gaps
+- Review Agent: compliance and readiness risks
+
+Generate:
+- implementation checklist grouped by phases
+- task execution order and dependencies
+- a short list of high-impact clarification questions
+
+## Step 9 — Second User Checkpoint (checklist Q&A)
+
+Ask each clarification question with exactly three options:
+1. Conservative/default option
+2. Alternative option
+3. Recommended option (the orchestrator's proposed answer)
+
+Wait for user answers to all questions, then apply answers to artifacts and
+update the checklist.
+
+## Step 10 — CREATE CUSTOMIZED SUB-AGENT FILES
 
 This is the critical step. You must physically create agent files in
 `.github/agents/` that are customized for THIS project.
@@ -3488,21 +3499,14 @@ Include a HANDOFF section that lists each sub-agent:
 ````
 ## Agent Handoffs
 
-When you need to delegate work, instruct the user to invoke the
-appropriate agent by referencing its file:
+When you need to delegate work, use the provider task tool with the matching
+agent role and include the corresponding `.github/agents/*.agent.md` file as context.
 
-- Architecture tasks → Tell user: "Now switch to the Architect Agent.
-  Open `.github/agents/orchestrate-architect.agent.md` and give it
-  work package WP-NNN"
-- Backend implementation → Tell user: "Switch to Code Agent Backend.
-  Open `.github/agents/orchestrate-code-backend.agent.md` and give it
-  work package WP-NNN"
-- Frontend implementation → Tell user: "Switch to Code Agent Frontend.
-  Open `.github/agents/orchestrate-code-frontend.agent.md`"
-- Testing → Tell user: "Switch to Test Agent.
-  Open `.github/agents/orchestrate-test.agent.md`"
-- Code review → Tell user: "Switch to Review Agent.
-  Open `.github/agents/orchestrate-review.agent.md`"
+- Architecture tasks → orchestrate-architect.agent.md
+- Backend implementation → orchestrate-code-backend.agent.md
+- Frontend implementation → orchestrate-code-frontend.agent.md
+- Testing → orchestrate-test.agent.md
+- Code review → orchestrate-review.agent.md
 ````
 
 ### `.github/agents/orchestrate-architect.agent.md`
@@ -3645,7 +3649,7 @@ handoffs:
     send: false
 ```
 
-## Step 8 — Update orchestrator-config.yml
+## Step 11 — Update orchestrator-config.yml
 
 Update `.specify/orchestrator/orchestrator-config.yml` with:
 - The feature name
@@ -3653,17 +3657,16 @@ Update `.specify/orchestrator/orchestrator-config.yml` with:
 - References to the created agent file paths
 - Confirmed provider capability values used in generated coordination artifacts
 
-## Step 9 — Initialize orchestration-state.yml
+## Step 12 — Initialize orchestration-state.yml
 
 Create `specs/001-feature-name/orchestrator-state.yml` with at least:
 
 ```yaml
 feature: "001-feature-name"
-mode: "{mode}"
 current_phase: "phase-1"
 work_packages: {}
 active_task_ids: {}
-next_action: "Review generated artifacts in specs/001-feature-name/ and confirm readiness to execute phase 1"
+next_action: "Run /speckit.orchestrate-run to start implementation using the approved checklist"
 ```
 
 Rules:
@@ -3672,7 +3675,7 @@ Rules:
 - If no verified slash command exists for continuation, use `next_action` only.
 - Track Task session IDs in `active_task_ids` as `{work_package_id}: {task_id}`.
 
-## Step 10 — Present Summary
+## Step 13 — Present Summary
 
 Show the user:
 ## Orchestration Initialized
@@ -3697,17 +3700,18 @@ Show the user:
 
 ### How to Run
 
-1. Review the generated artifacts in `specs/001-feature-name/`
+1. Confirm that checklist answers have been applied.
 2. If `speckit.orchestrate-run` exists in `provider_capabilities.registered_slash_commands`,
-   you may suggest it as the next command.
-3. Otherwise provide a plain-English `next_action` that tells the user exactly how to continue.
-4. The orchestrator must halt at checkpoints and wait for user decisions.
+   suggest it as the next command.
+3. Otherwise provide a plain-English `next_action` instructing the user to start run mode.
+4. The orchestrator should automatically delegate to specialized agents as needed during init.
 
 ### User Checkpoints (must halt and ask)
 
 | Trigger Phase | Summary Presented | User Decision | Orchestrator Action |
 |---------------|-------------------|---------------|---------------------|
-| End of each work package (supervised mode) | completed tasks, changed files, blockers | proceed / retry / stop | continue / rerun package / halt |
+| After plan artifacts generation | constitution/spec/plan/tasks summary and open gaps | accept / request changes / stop | continue / revise artifacts / halt |
+| After checklist question generation | implementation checklist and Q&A options | provide answers / request rewrite / stop | apply answers / regenerate checklist / halt |
 | End of each phase | phase progress table and risks | proceed / adjust / stop | continue / revise plan+tasks / halt |
 | Before merge / completion | review verdict and unresolved findings | approve / request fixes / stop | mark complete / route fixes / halt |
 
@@ -3747,29 +3751,16 @@ TASKS: {task_list}
 ````
 
 ### 2. Delegate to the Sub-Agent
-You CANNOT do the work yourself. You MUST delegate. Give the user these
-exact instructions:
+You CANNOT do the work yourself. You MUST delegate using the tool defined by
+`provider_capabilities.task_tool` and a `subagent_type` from
+`provider_capabilities.subagent_types`.
+Read these values from `.specify/orchestrator/orchestrator-config.yml`.
 
-📋 ACTION REQUIRED:
-
-Open a new Copilot Chat session and reference the agent file:
-
-  @workspace Use the agent defined in `.github/agents/{agent_file_name}`
-
-Then give it this work package:
-
-  Execute work package {WP-ID}: {title}
-  Tasks: {numbered task list with file markers}
-
-  Read these files for context:
-  - `specs/{feature}/plan.md` (tech stack and architecture)
-  - `specs/{feature}/spec.md` (requirements)
-  - `.specify/memory/constitution.md` (principles)
-
-  After completing all tasks, report back with:
-  [WP-{ID}] COMPLETE — list of files created/modified
-
-When done, come back to THIS chat and tell me the result.
+Delegate with a prompt that includes:
+- work package ID and title
+- task list with file markers
+- required context files (`plan.md`, `spec.md`, `constitution.md`)
+- expected completion output (`[WP-{ID}] COMPLETE — list files changed`)
 
 ### 3. Wait for the User to Report Back
 After the user confirms the sub-agent completed the work package:
@@ -3792,41 +3783,21 @@ PHASE {N} COMPLETE: {phase_name}
 Next phase: {N+1} — {next_phase_name}
 ──────────────────────────────────────────
 
-#### Mode-Based Pause
-- Supervised: Ask "Approve phase and continue? (yes / retry WP-NNN / abort)"
-- Semi-auto: Ask "Continue to next phase? (yes / abort)"
-- Autonomous: Continue immediately unless test failures exist
+#### Phase Pause (always required)
+Ask: "Continue to next phase? (yes / adjust plan / abort)"
 
 You MUST halt and wait for user input at each checkpoint; do not proceed autonomously after asking.
 
 ### 4. Handle Parallel Packages
-If the current phase has packages marked parallel, tell the user:
-
-📋 PARALLEL EXECUTION — Open multiple Copilot Chat sessions:
-
-Session 1: @workspace Use `.github/agents/{agent_1}`
-  → Execute WP-{X}: {title}
-
-Session 2: @workspace Use `.github/agents/{agent_2}`
-  → Execute WP-{Y}: {title}
-
-Run both simultaneously. Report back when BOTH are complete.
+If the current phase has packages marked parallel, launch one delegated task per
+package in parallel using provider-valid `subagent_type` values. Track every
+returned task/session ID in `active_task_ids` until complete.
 
 ### 5. After All Implementation Phases — Trigger Review
 📋 REVIEW PHASE:
-
-Open a new Copilot Chat session:
-
-  @workspace Use the agent defined in `.github/agents/orchestrate-review.agent.md`
-
-  Review all completed work packages:
-  {list of completed WPs with their file lists}
-
-  Check against:
-  - `specs/{feature}/spec.md` (acceptance criteria)
-  - `.specify/memory/constitution.md` (principles)
-
-  Issue verdict: APPROVE or REQUEST_CHANGES with findings table.
+Delegate review to the review sub-agent using the configured task tool.
+Provide completed work package outputs and require verdict:
+APPROVE or REQUEST_CHANGES with findings table.
 
 If REQUEST_CHANGES:
 
@@ -3867,7 +3838,7 @@ Read `specs/{active_feature}/orchestrator-state.yml` and `specs/{active_feature}
 Display:
 
 ## Orchestration Status: {feature_name}
-**Mode:** {mode} | **Phase:** {current}/{total}
+**Phase:** {current}/{total}
 
 | WP | Agent | Status | Tasks | Details |
 |----|-------|--------|-------|---------|
@@ -3955,24 +3926,13 @@ def _setup_orchestration(project_path: Path, agent: str, script_type: str, ai_co
     agents_dir = project_path / ".specify" / "orchestrator" / "agents"
     agents_dir.mkdir(parents=True, exist_ok=True)
 
-    mode = _select_orchestration_mode()
     team = _select_agent_team()
 
-    _generate_orchestrator_config(project_path, mode, team)
+    _generate_orchestrator_config(project_path, team)
     _install_orchestrator_templates(project_path)
     _install_orchestrate_commands(project_path, agent, ai_commands_dir=ai_commands_dir)
 
     console.print("[bold green]✓[/bold green] Orchestration scaffolding created")
-
-
-def _select_orchestration_mode() -> str:
-    """Let the user pick an autonomy level for the orchestrator."""
-    options = {
-        "supervised": "Human approves every step",
-        "semi-auto": "Human approves plan, agents execute",
-        "autonomous": "Full auto with review checkpoints",
-    }
-    return select_with_arrows(options, "Select orchestration mode", "supervised")
 
 
 def _select_agent_team() -> dict:
@@ -3986,11 +3946,10 @@ def _select_agent_team() -> dict:
     return {"architect": 1, "code": count, "test": 1, "review": 1}
 
 
-def _generate_orchestrator_config(project_path: Path, mode: str, team: dict, feature: str = "") -> None:
-    """Write the orchestrator YAML config file."""
+def _generate_orchestrator_config(project_path: Path, team: dict, feature: str = "") -> None:
+    """Write the orchestrator YAML config (team, checkpoints, provider capabilities, quality gates)."""
     config = {
         "feature": feature,
-        "mode": mode,
         "agents": {
             "architect": {
                 "role": "architect",

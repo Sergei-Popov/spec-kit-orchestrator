@@ -5,12 +5,6 @@
 # Active feature (auto-detected from git branch or SPECIFY_FEATURE env var)
 feature: ""
 
-# Autonomy mode: supervised | semi-auto | autonomous
-#   supervised  — human approves every work package before proceeding
-#   semi-auto   — human approves each phase, agents execute within phase
-#   autonomous  — full auto, pauses only on CRITICAL findings or test failures
-mode: semi-auto
-
 # Agent team configuration
 agents:
   architect:
