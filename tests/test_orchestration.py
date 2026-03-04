@@ -195,3 +195,37 @@ class TestOrchestrateCliFlag:
         import re
         clean = re.sub(r"\x1b\[[0-9;]*m", "", result.output)
         assert "--orchestrate" in clean
+
+
+# ===== Embedded content =====
+
+class TestEmbeddedContentWrittenWithoutTemplateFiles:
+    """Verify files are written from embedded constants, not copied from disk."""
+
+    def test_agent_templates_written_in_empty_project(self, project_dir):
+        # project_dir has no .specify/templates/ — embedded constants must suffice
+        _install_orchestrator_templates(project_dir)
+        agents_dir = project_dir / ".specify" / "orchestrator" / "agents"
+        for filename in ORCHESTRATOR_AGENT_FILES:
+            path = agents_dir / filename
+            assert path.exists(), f"{filename} missing"
+            assert len(path.read_text(encoding="utf-8")) > 50, f"{filename} too short"
+
+    def test_slash_commands_written_in_empty_project(self, project_dir):
+        _install_orchestrate_commands(project_dir, "copilot")
+        commands_dir = project_dir / ".github" / "agents"
+        for filename in ORCHESTRATE_TEMPLATE_FILES:
+            path = commands_dir / filename
+            assert path.exists(), f"{filename} missing"
+            content = path.read_text(encoding="utf-8")
+            assert "$ARGUMENTS" in content, f"{filename} missing $ARGUMENTS"
+
+    def test_all_three_artifacts_produced(self, project_dir):
+        team = {"architect": 1, "code": 1, "test": 1, "review": 1}
+        _generate_orchestrator_config(project_dir, "supervised", team)
+        _install_orchestrator_templates(project_dir)
+        _install_orchestrate_commands(project_dir, "copilot")
+
+        assert (project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml").exists()
+        assert len(list((project_dir / ".specify" / "orchestrator" / "agents").glob("*.md"))) == 5
+        assert len(list((project_dir / ".github" / "agents").glob("speckit.orchestrate.*.md"))) == 6
