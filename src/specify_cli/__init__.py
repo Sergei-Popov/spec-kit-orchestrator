@@ -3322,8 +3322,9 @@ Blockers: {count or "none"}
 
 ORCH_PROMPT_INIT = """\
 ---
-name: "Initialize Orchestration"
+agent: speckit.orchestrate-init
 description: "Analyze project, generate spec-kit artifacts, and create customized sub-agents"
+name: "Initialize Orchestration"
 ---
 
 You are the Orchestrator. You manage a virtual development team for spec-driven development.
@@ -3596,8 +3597,9 @@ $ARGUMENTS
 
 ORCH_PROMPT_RUN = """\
 ---
-name: "Run Orchestration"
+agent: speckit.orchestrate-run
 description: "Execute the coordination plan by delegating to sub-agents phase by phase"
+name: "Run Orchestration"
 ---
 
 You are the Orchestrator Agent. Read your full role definition from:
@@ -3730,8 +3732,9 @@ $ARGUMENTS
 
 ORCH_PROMPT_STATUS = """\
 ---
-name: "Orchestration Status"
+agent: speckit.orchestrate-status
 description: "Display current progress of the orchestrated development workflow"
+name: "Orchestration Status"
 ---
 
 Read `specs/{active_feature}/orchestrator-state.yml` and `specs/{active_feature}/agent-coordination.yml`.

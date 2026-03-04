@@ -154,8 +154,10 @@ class TestInstallOrchestrateCommands:
         commands_dir = project_dir / ".claude" / "commands"
         for cmd_file in commands_dir.glob("speckit.orchestrate-*.prompt.md"):
             content = cmd_file.read_text(encoding="utf-8")
+            command_name = cmd_file.name.replace(".prompt.md", "")
             assert len(content) > 0
             assert "$ARGUMENTS" in content
+            assert f"agent: {command_name}" in content
             assert "name:" in content
             assert "description:" in content
 

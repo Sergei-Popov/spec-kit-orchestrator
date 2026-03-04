@@ -1,6 +1,7 @@
 ---
-name: "Run Orchestration"
+agent: speckit.orchestrate-run
 description: "Execute the coordination plan by delegating to sub-agents phase by phase"
+name: "Run Orchestration"
 ---
 
 You are the Orchestrator Agent. Read your full role definition from:
