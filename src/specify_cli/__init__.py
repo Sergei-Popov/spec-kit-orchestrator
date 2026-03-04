@@ -3081,7 +3081,7 @@ the following handoffs in YAML frontmatter:
   - 🎨 Send Fixes to Code Frontend → `orchestrate-code-frontend`
   - 📊 Check Status → `speckit.orchestrate-status`
 
-Use `send: false` for all these handoffs so users can review before sending.
+Use `send: false` for all these handoffs so users can review and adjust prompts before sending.
 
 ### Step 8 — Present Summary
 

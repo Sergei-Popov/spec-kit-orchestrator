@@ -174,6 +174,7 @@ class TestSlashCommandsCopilot:
     def test_copilot_orchestrate_agent_handoff_counts(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
         agents_dir = project_dir / ".github" / "agents"
+        # init: Run + Status, run: 6 delegate buttons + Status, status: Continue + Re-initialize
         expected_counts = {"init": 2, "run": 7, "status": 2}
         for name, expected_count in expected_counts.items():
             content = (agents_dir / f"speckit.orchestrate-{name}.agent.md").read_text(encoding="utf-8")
