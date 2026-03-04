@@ -13,10 +13,6 @@ from specify_cli import (
     _generate_orchestrator_config,
     _install_orchestrator_templates,
     _install_orchestrate_commands,
-    ORCHESTRATE_COMMANDS,
-    ORCHESTRATE_TEMPLATE_FILES,
-    ORCHESTRATOR_AGENT_FILES,
-    COPILOT_ORCHESTRATE_AGENT_FILES,
     AGENT_CONFIG,
     app,
 )
@@ -151,12 +147,10 @@ class TestAgentPromptTemplatesInstalled:
 # ===== Test 6: slash commands installed for copilot =====
 
 class TestSlashCommandsCopilot:
-    def test_copilot_agent_roles_installed(self, project_dir):
+    def test_copilot_no_orchestrate_agent_roles_installed(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
-        # Copilot: agent ROLE files go to .github/agents/
         agents_dir = project_dir / ".github" / "agents"
-        for filename in COPILOT_ORCHESTRATE_AGENT_FILES:
-            assert (agents_dir / filename).exists(), f"{filename} not found"
+        assert not agents_dir.exists() or not list(agents_dir.glob("speckit.orchestrate.*.agent.md"))
 
     def test_copilot_action_prompts_installed(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
@@ -182,11 +176,11 @@ class TestSlashCommandsCopilot:
 # ===== Test 7: slash commands installed for claude =====
 
 class TestSlashCommandsClaude:
-    def test_claude_agent_files_installed(self, project_dir):
+    def test_claude_no_orchestrate_agent_files_installed(self, project_dir):
         _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
         agent_files = list(commands_dir.glob("speckit.orchestrate.*.agent.md"))
-        assert len(agent_files) == 5
+        assert len(agent_files) == 0
 
     def test_claude_prompt_files_installed(self, project_dir):
         _install_orchestrate_commands(project_dir, "claude")
@@ -390,7 +384,7 @@ class TestOrchestrateWithNoGit:
         assert (project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml").exists()
         assert (project_dir / ".specify" / "orchestrator" / "agents").is_dir()
         assert (project_dir / ".claude" / "commands").is_dir()
-        # Verify agent and prompt files are present
+        # Verify only orchestration prompts are present
         commands_dir = project_dir / ".claude" / "commands"
-        assert len(list(commands_dir.glob("speckit.orchestrate.*.agent.md"))) == 5
+        assert len(list(commands_dir.glob("speckit.orchestrate.*.agent.md"))) == 0
         assert len(list(commands_dir.glob("speckit.orchestrate.*.prompt.md"))) == 3
