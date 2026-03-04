@@ -29,7 +29,7 @@ This installs standard spec-kit templates plus orchestration templates and slash
 Run the orchestration init command in your AI assistant:
 
 ```text
-/speckit.orchestrate.init Set up semi-auto mode with 2 code agents
+/speckit.orchestrate-init Set up semi-auto mode with 2 code agents
 ```
 
 ## Workflow
@@ -39,12 +39,12 @@ Run the orchestration init command in your AI assistant:
 The orchestrator manages the entire lifecycle — from specification to implementation — using 3 commands:
 
 ```text
-/speckit.orchestrate.init    →  Analyze project, activate agents, generate spec + plan + tasks + coordination
-/speckit.orchestrate.run     →  Execute the coordination plan with agent role-switching
-/speckit.orchestrate.status  →  Read-only progress view (run anytime)
+/speckit.orchestrate-init    →  Analyze project, activate agents, generate spec + plan + tasks + coordination
+/speckit.orchestrate-run     →  Execute the coordination plan with agent role-switching
+/speckit.orchestrate-status  →  Read-only progress view (run anytime)
 ```
 
-You describe your project to `/speckit.orchestrate.init` and the orchestrator handles constitution, specification, planning, task breakdown, and implementation by delegating to specialized agents. There is no need to run the standard `/speckit.*` commands separately.
+You describe your project to `/speckit.orchestrate-init` and the orchestrator handles constitution, specification, planning, task breakdown, and implementation by delegating to specialized agents. There is no need to run the standard `/speckit.*` commands separately.
 
 ## Autonomy Modes
 
@@ -96,7 +96,7 @@ Reviews completed work packages for constitution compliance, spec compliance, co
 
 ## Running Parallel Agents in Practice
 
-When `/speckit.orchestrate.run` reaches a parallel phase, it lists the work packages and their agent prompts. To run them simultaneously:
+When `/speckit.orchestrate-run` reaches a parallel phase, it lists the work packages and their agent prompts. To run them simultaneously:
 
 1. **VS Code:** Open multiple Copilot Chat panels (split view). Paste each agent's package prompt into a separate panel.
 2. **Claude Code:** Open multiple terminal sessions. Run each package in its own session.
@@ -106,14 +106,14 @@ After all parallel packages complete, confirm in the orchestrator session to con
 
 ## State Recovery
 
-If your session is interrupted, orchestrator-state.yml persists on disk. Running `/speckit.orchestrate.run` again automatically resumes from the last completed work package. No special flags needed.
+If your session is interrupted, orchestrator-state.yml persists on disk. Running `/speckit.orchestrate-run` again automatically resumes from the last completed work package. No special flags needed.
 
 ## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
-| "No orchestrator config found" | Run `/speckit.orchestrate.init` first |
-| "No tasks.md found" | Run `/speckit.orchestrate.init` with a project description first |
+| "No orchestrator config found" | Run `/speckit.orchestrate-init` first |
+| "No tasks.md found" | Run `/speckit.orchestrate-init` with a project description first |
 | Review cycle stuck in loop | Check max_review_rounds in config, increase or escalate manually |
-| File conflicts after parallel phase | Re-run `/speckit.orchestrate.run` to resolve |
+| File conflicts after parallel phase | Re-run `/speckit.orchestrate-run` to resolve |
 | State file corrupted | Delete `orchestrator-state.yml` and re-run — starts from beginning |

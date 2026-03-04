@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Multi-agent orchestration mode (`--orchestrate` flag on `specify init`)
-- 3 new `/speckit.orchestrate.*` slash commands (init, run, status)
+- 3 new `/speckit.orchestrate-*` slash commands (init, run, status)
 - PyYAML dependency for orchestration config files
 
 ## [0.1.13] - 2026-03-03

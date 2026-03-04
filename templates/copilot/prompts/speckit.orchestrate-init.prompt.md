@@ -62,7 +62,7 @@ conventions from the plan).
 
 Create these files:
 
-### `.github/agents/orchestrate.orchestrator.agent.md`
+### `.github/agents/orchestrate-orchestrator.agent.md`
 Take the base from `.specify/orchestrator/agents/orchestrator.md`.
 Add to it:
 - The specific agent team composition you decided in Step 1
@@ -78,20 +78,20 @@ When you need to delegate work, instruct the user to invoke the
 appropriate agent by referencing its file:
 
 - Architecture tasks → Tell user: "Now switch to the Architect Agent.
-  Open `.github/agents/orchestrate.architect.agent.md` and give it
+  Open `.github/agents/orchestrate-architect.agent.md` and give it
   work package WP-NNN"
 - Backend implementation → Tell user: "Switch to Code Agent Backend.
-  Open `.github/agents/orchestrate.code-backend.agent.md` and give it
+  Open `.github/agents/orchestrate-code-backend.agent.md` and give it
   work package WP-NNN"
 - Frontend implementation → Tell user: "Switch to Code Agent Frontend.
-  Open `.github/agents/orchestrate.code-frontend.agent.md`"
+  Open `.github/agents/orchestrate-code-frontend.agent.md`"
 - Testing → Tell user: "Switch to Test Agent.
-  Open `.github/agents/orchestrate.test.agent.md`"
+  Open `.github/agents/orchestrate-test.agent.md`"
 - Code review → Tell user: "Switch to Review Agent.
-  Open `.github/agents/orchestrate.review.agent.md`"
+  Open `.github/agents/orchestrate-review.agent.md`"
 ````
 
-### `.github/agents/orchestrate.architect.agent.md`
+### `.github/agents/orchestrate-architect.agent.md`
 Take the base from `.specify/orchestrator/agents/architect.md`.
 Customize with:
 - The specific tech stack from plan.md
@@ -99,7 +99,7 @@ Customize with:
 - The specific API contracts
 - Reference to constitution.md location
 
-### `.github/agents/orchestrate.code-backend.agent.md`
+### `.github/agents/orchestrate-code-backend.agent.md`
 (Only create if the project has a backend domain)
 Take the base from `.specify/orchestrator/agents/code.md`.
 Customize with:
@@ -109,7 +109,7 @@ Customize with:
 - List of tasks with (create:) and (update:) markers
 - Testing command to run after each task
 
-### `.github/agents/orchestrate.code-frontend.agent.md`
+### `.github/agents/orchestrate-code-frontend.agent.md`
 (Only create if the project has a frontend domain)
 Take the base from `.specify/orchestrator/agents/code.md`.
 Customize with:
@@ -118,21 +118,21 @@ Customize with:
 - The specific work packages assigned to code-frontend
 - Testing command
 
-### `.github/agents/orchestrate.code-infra.agent.md`
+### `.github/agents/orchestrate-code-infra.agent.md`
 (Only create if the project has infrastructure/DevOps tasks)
 Take the base from `.specify/orchestrator/agents/code.md`.
 Customize with:
 - Infrastructure tooling (e.g., "You write Dockerfiles, docker-compose.yml, nginx configs")
 - The specific work packages assigned to code-infra
 
-### `.github/agents/orchestrate.test.agent.md`
+### `.github/agents/orchestrate-test.agent.md`
 Take the base from `.specify/orchestrator/agents/test.md`.
 Customize with:
 - Testing framework from plan.md (e.g., "Use Vitest for unit, Supertest for API")
 - Test file location convention
 - Coverage threshold from orchestrator-config.yml
 
-### `.github/agents/orchestrate.review.agent.md`
+### `.github/agents/orchestrate-review.agent.md`
 Take the base from `.specify/orchestrator/agents/review.md`.
 Customize with:
 - Constitution principles summary (so the reviewer knows what to check)
@@ -161,18 +161,18 @@ Show the user:
 ### Agent Team Created
 | Agent File | Role | Domain |
 |-----------|------|--------|
-| orchestrate.orchestrator.agent.md | Orchestrator | Full project |
-| orchestrate.architect.agent.md | Architect | Architecture |
-| orchestrate.code-backend.agent.md | Code | Backend |
-| orchestrate.code-frontend.agent.md | Code | Frontend |
-| orchestrate.code-infra.agent.md | Code | Infrastructure |
-| orchestrate.test.agent.md | Test | All domains |
-| orchestrate.review.agent.md | Review | All domains |
+| orchestrate-orchestrator.agent.md | Orchestrator | Full project |
+| orchestrate-architect.agent.md | Architect | Architecture |
+| orchestrate-code-backend.agent.md | Code | Backend |
+| orchestrate-code-frontend.agent.md | Code | Frontend |
+| orchestrate-code-infra.agent.md | Code | Infrastructure |
+| orchestrate-test.agent.md | Test | All domains |
+| orchestrate-review.agent.md | Review | All domains |
 
 ### How to Run
 
 1. Review the generated artifacts in `specs/001-feature-name/`
-2. Start execution: `/speckit.orchestrate.run`
+2. Start execution: `/speckit.orchestrate-run`
 3. The orchestrator will guide you through each phase and tell you
    when to switch to a specific sub-agent.
 

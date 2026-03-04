@@ -145,13 +145,13 @@ class TestInstallOrchestrateCommands:
     def test_creates_three_prompt_files_for_claude(self, project_dir):
         _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
-        md_files = list(commands_dir.glob("speckit.orchestrate.*.prompt.md"))
+        md_files = list(commands_dir.glob("speckit.orchestrate-*.prompt.md"))
         assert len(md_files) == 3
 
     def test_prompt_files_have_content(self, project_dir):
         _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
-        for cmd_file in commands_dir.glob("speckit.orchestrate.*.prompt.md"):
+        for cmd_file in commands_dir.glob("speckit.orchestrate-*.prompt.md"):
             content = cmd_file.read_text(encoding="utf-8")
             assert len(content) > 0
             assert "$ARGUMENTS" in content
@@ -162,7 +162,7 @@ class TestInstallOrchestrateCommands:
         _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
         expected = set(ORCHESTRATE_TEMPLATE_FILES)
-        actual = {f.name for f in commands_dir.glob("speckit.orchestrate.*.prompt.md")}
+        actual = {f.name for f in commands_dir.glob("speckit.orchestrate-*.prompt.md")}
         assert actual == expected
 
     def test_no_orchestrate_agent_files_created_for_claude(self, project_dir):
@@ -178,14 +178,14 @@ class TestInstallOrchestrateCommands:
     def test_copilot_action_prompts_in_prompts_dir(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
         prompts_dir = project_dir / ".github" / "prompts"
-        prompt_files = list(prompts_dir.glob("speckit.orchestrate.*.prompt.md"))
+        prompt_files = list(prompts_dir.glob("speckit.orchestrate-*.prompt.md"))
         assert len(prompt_files) == 3
 
     def test_gemini_uses_commands_subdir(self, project_dir):
         _install_orchestrate_commands(project_dir, "gemini")
         commands_dir = project_dir / ".gemini" / "commands"
         agent_files = list(commands_dir.glob("speckit.orchestrate.*.agent.md"))
-        prompt_files = list(commands_dir.glob("speckit.orchestrate.*.prompt.md"))
+        prompt_files = list(commands_dir.glob("speckit.orchestrate-*.prompt.md"))
         assert len(agent_files) == 0
         assert len(prompt_files) == 3
 
@@ -241,7 +241,7 @@ class TestEmbeddedContentWrittenWithoutTemplateFiles:
         # Copilot: action prompts in .github/prompts/
         prompts_dir = project_dir / ".github" / "prompts"
         for stem in ("init", "run", "status"):
-            path = prompts_dir / f"speckit.orchestrate.{stem}.prompt.md"
+            path = prompts_dir / f"speckit.orchestrate-{stem}.prompt.md"
             assert path.exists(), f"{path.name} missing"
             content = path.read_text(encoding="utf-8")
             assert "$ARGUMENTS" in content, f"{path.name} missing $ARGUMENTS"
@@ -257,4 +257,4 @@ class TestEmbeddedContentWrittenWithoutTemplateFiles:
         assert not (project_dir / ".github" / "agents").exists() or not list(
             (project_dir / ".github" / "agents").glob("speckit.orchestrate.*.agent.md")
         )
-        assert len(list((project_dir / ".github" / "prompts").glob("speckit.orchestrate.*.prompt.md"))) == 3
+        assert len(list((project_dir / ".github" / "prompts").glob("speckit.orchestrate-*.prompt.md"))) == 3

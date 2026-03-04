@@ -12,7 +12,7 @@ Display:
 - Overall progress percentage
 - Active blockers or errors
 
-If no state file exists, tell user to run /speckit.orchestrate.init first.
+If no state file exists, tell user to run /speckit.orchestrate-init first.
 Read-only — do not modify any files.
 
 $ARGUMENTS

@@ -4,7 +4,7 @@ description: "Execute the coordination plan by delegating to sub-agents phase by
 ---
 
 You are the Orchestrator Agent. Read your full role definition from:
-`.github/agents/orchestrate.orchestrator.agent.md`
+`.github/agents/orchestrate-orchestrator.agent.md`
 
 Read the execution plan:
 - `specs/{active_feature}/agent-coordination.yml`
@@ -93,7 +93,7 @@ Run both simultaneously. Report back when BOTH are complete.
 
 Open a new Copilot Chat session:
 
-  @workspace Use the agent defined in `.github/agents/orchestrate.review.agent.md`
+  @workspace Use the agent defined in `.github/agents/orchestrate-review.agent.md`
 
   Review all completed work packages:
   {list of completed WPs with their file lists}

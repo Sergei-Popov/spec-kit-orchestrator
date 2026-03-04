@@ -2395,25 +2395,25 @@ ORCHESTRATE_COMMANDS = {
 }
 
 ORCHESTRATE_TEMPLATE_FILES = [
-    "speckit.orchestrate.init.prompt.md",
-    "speckit.orchestrate.run.prompt.md",
-    "speckit.orchestrate.status.prompt.md",
+    "speckit.orchestrate-init.prompt.md",
+    "speckit.orchestrate-run.prompt.md",
+    "speckit.orchestrate-status.prompt.md",
 ]
 
 ORCHESTRATOR_AGENT_FILES = [
-    "speckit.orchestrate.orchestrator.agent.md",
-    "speckit.orchestrate.architect.agent.md",
-    "speckit.orchestrate.code.agent.md",
-    "speckit.orchestrate.test.agent.md",
-    "speckit.orchestrate.review.agent.md",
+    "orchestrate-orchestrator.agent.md",
+    "orchestrate-architect.agent.md",
+    "orchestrate-code-backend.agent.md",
+    "orchestrate-test.agent.md",
+    "orchestrate-review.agent.md",
 ]
 
 COPILOT_ORCHESTRATE_AGENT_FILES = [
-    "speckit.orchestrate.orchestrator.agent.md",
-    "speckit.orchestrate.architect.agent.md",
-    "speckit.orchestrate.code.agent.md",
-    "speckit.orchestrate.test.agent.md",
-    "speckit.orchestrate.review.agent.md",
+    "orchestrate-orchestrator.agent.md",
+    "orchestrate-architect.agent.md",
+    "orchestrate-code-backend.agent.md",
+    "orchestrate-test.agent.md",
+    "orchestrate-review.agent.md",
 ]
 
 # ── Embedded agent prompt templates ──────────────────────────────────────────
@@ -2426,7 +2426,7 @@ You manage the ENTIRE software development lifecycle, not just implementation.
 
 <lifecycle_phases>
 
-PHASE 0 — PROJECT SETUP (triggered by /speckit.orchestrate.init):
+PHASE 0 — PROJECT SETUP (triggered by /speckit.orchestrate-init):
 - Analyze user's project description.
 - Decide which agents to activate and how many.
 - Create constitution.md by delegating to Architect Agent.
@@ -2437,7 +2437,7 @@ PHASE 0 — PROJECT SETUP (triggered by /speckit.orchestrate.init):
 - Generate agent-coordination.yml.
 - Present full plan to user for approval.
 
-PHASE 1 — FOUNDATION (triggered by /speckit.orchestrate.run):
+PHASE 1 — FOUNDATION (triggered by /speckit.orchestrate-run):
 - Architect Agent reviews plan and data model.
 - Code Agent(s) set up project structure, dependencies, config.
 - Test Agent sets up testing infrastructure.
@@ -2947,11 +2947,11 @@ Action: Code Agent must fix R1, R2 before re-review.
 """
 
 COPILOT_ORCHESTRATE_AGENT_CONTENT = {
-    "speckit.orchestrate.orchestrator.agent.md": COPILOT_ORCH_ORCHESTRATOR_AGENT,
-    "speckit.orchestrate.architect.agent.md": COPILOT_ORCH_ARCHITECT_AGENT,
-    "speckit.orchestrate.code.agent.md": COPILOT_ORCH_CODE_AGENT,
-    "speckit.orchestrate.test.agent.md": COPILOT_ORCH_TEST_AGENT,
-    "speckit.orchestrate.review.agent.md": COPILOT_ORCH_REVIEW_AGENT,
+    "orchestrate-orchestrator.agent.md": COPILOT_ORCH_ORCHESTRATOR_AGENT,
+    "orchestrate-architect.agent.md": COPILOT_ORCH_ARCHITECT_AGENT,
+    "orchestrate-code-backend.agent.md": COPILOT_ORCH_CODE_AGENT,
+    "orchestrate-test.agent.md": COPILOT_ORCH_TEST_AGENT,
+    "orchestrate-review.agent.md": COPILOT_ORCH_REVIEW_AGENT,
 }
 
 # ── Embedded orchestrate slash-command templates ─────────────────────────────
@@ -3021,7 +3021,7 @@ conventions from the plan).
 
 Create these files:
 
-### `.github/agents/orchestrate.orchestrator.agent.md`
+### `.github/agents/orchestrate-orchestrator.agent.md`
 Take the base from `.specify/orchestrator/agents/orchestrator.md`.
 Add to it:
 - The specific agent team composition you decided in Step 1
@@ -3037,20 +3037,20 @@ When you need to delegate work, instruct the user to invoke the
 appropriate agent by referencing its file:
 
 - Architecture tasks → Tell user: "Now switch to the Architect Agent.
-  Open `.github/agents/orchestrate.architect.agent.md` and give it
+  Open `.github/agents/orchestrate-architect.agent.md` and give it
   work package WP-NNN"
 - Backend implementation → Tell user: "Switch to Code Agent Backend.
-  Open `.github/agents/orchestrate.code-backend.agent.md` and give it
+  Open `.github/agents/orchestrate-code-backend.agent.md` and give it
   work package WP-NNN"
 - Frontend implementation → Tell user: "Switch to Code Agent Frontend.
-  Open `.github/agents/orchestrate.code-frontend.agent.md`"
+  Open `.github/agents/orchestrate-code-frontend.agent.md`"
 - Testing → Tell user: "Switch to Test Agent.
-  Open `.github/agents/orchestrate.test.agent.md`"
+  Open `.github/agents/orchestrate-test.agent.md`"
 - Code review → Tell user: "Switch to Review Agent.
-  Open `.github/agents/orchestrate.review.agent.md`"
+  Open `.github/agents/orchestrate-review.agent.md`"
 ````
 
-### `.github/agents/orchestrate.architect.agent.md`
+### `.github/agents/orchestrate-architect.agent.md`
 Take the base from `.specify/orchestrator/agents/architect.md`.
 Customize with:
 - The specific tech stack from plan.md
@@ -3058,7 +3058,7 @@ Customize with:
 - The specific API contracts
 - Reference to constitution.md location
 
-### `.github/agents/orchestrate.code-backend.agent.md`
+### `.github/agents/orchestrate-code-backend.agent.md`
 (Only create if the project has a backend domain)
 Take the base from `.specify/orchestrator/agents/code.md`.
 Customize with:
@@ -3068,7 +3068,7 @@ Customize with:
 - List of tasks with (create:) and (update:) markers
 - Testing command to run after each task
 
-### `.github/agents/orchestrate.code-frontend.agent.md`
+### `.github/agents/orchestrate-code-frontend.agent.md`
 (Only create if the project has a frontend domain)
 Take the base from `.specify/orchestrator/agents/code.md`.
 Customize with:
@@ -3077,21 +3077,21 @@ Customize with:
 - The specific work packages assigned to code-frontend
 - Testing command
 
-### `.github/agents/orchestrate.code-infra.agent.md`
+### `.github/agents/orchestrate-code-infra.agent.md`
 (Only create if the project has infrastructure/DevOps tasks)
 Take the base from `.specify/orchestrator/agents/code.md`.
 Customize with:
 - Infrastructure tooling (e.g., "You write Dockerfiles, docker-compose.yml, nginx configs")
 - The specific work packages assigned to code-infra
 
-### `.github/agents/orchestrate.test.agent.md`
+### `.github/agents/orchestrate-test.agent.md`
 Take the base from `.specify/orchestrator/agents/test.md`.
 Customize with:
 - Testing framework from plan.md (e.g., "Use Vitest for unit, Supertest for API")
 - Test file location convention
 - Coverage threshold from orchestrator-config.yml
 
-### `.github/agents/orchestrate.review.agent.md`
+### `.github/agents/orchestrate-review.agent.md`
 Take the base from `.specify/orchestrator/agents/review.md`.
 Customize with:
 - Constitution principles summary (so the reviewer knows what to check)
@@ -3120,18 +3120,18 @@ Show the user:
 ### Agent Team Created
 | Agent File | Role | Domain |
 |-----------|------|--------|
-| orchestrate.orchestrator.agent.md | Orchestrator | Full project |
-| orchestrate.architect.agent.md | Architect | Architecture |
-| orchestrate.code-backend.agent.md | Code | Backend |
-| orchestrate.code-frontend.agent.md | Code | Frontend |
-| orchestrate.code-infra.agent.md | Code | Infrastructure |
-| orchestrate.test.agent.md | Test | All domains |
-| orchestrate.review.agent.md | Review | All domains |
+| orchestrate-orchestrator.agent.md | Orchestrator | Full project |
+| orchestrate-architect.agent.md | Architect | Architecture |
+| orchestrate-code-backend.agent.md | Code | Backend |
+| orchestrate-code-frontend.agent.md | Code | Frontend |
+| orchestrate-code-infra.agent.md | Code | Infrastructure |
+| orchestrate-test.agent.md | Test | All domains |
+| orchestrate-review.agent.md | Review | All domains |
 
 ### How to Run
 
 1. Review the generated artifacts in `specs/001-feature-name/`
-2. Start execution: `/speckit.orchestrate.run`
+2. Start execution: `/speckit.orchestrate-run`
 3. The orchestrator will guide you through each phase and tell you
    when to switch to a specific sub-agent.
 
@@ -3145,7 +3145,7 @@ description: "Execute the coordination plan by delegating to sub-agents phase by
 ---
 
 You are the Orchestrator Agent. Read your full role definition from:
-`.github/agents/orchestrate.orchestrator.agent.md`
+`.github/agents/orchestrate-orchestrator.agent.md`
 
 Read the execution plan:
 - `specs/{active_feature}/agent-coordination.yml`
@@ -3234,7 +3234,7 @@ Run both simultaneously. Report back when BOTH are complete.
 
 Open a new Copilot Chat session:
 
-  @workspace Use the agent defined in `.github/agents/orchestrate.review.agent.md`
+  @workspace Use the agent defined in `.github/agents/orchestrate-review.agent.md`
 
   Review all completed work packages:
   {list of completed WPs with their file lists}
@@ -3293,7 +3293,7 @@ Display:
 
 **Progress:** ████░░░░░░ 35% | **Elapsed:** 8m 12s
 
-If no state file exists, tell user to run `/speckit.orchestrate.init` first.
+If no state file exists, tell user to run `/speckit.orchestrate-init` first.
 Do NOT modify any files. Read-only.
 
 $ARGUMENTS
@@ -3301,18 +3301,18 @@ $ARGUMENTS
 
 # Map agent filenames to their embedded content (for agent command files)
 ORCHESTRATE_AGENT_FILE_CONTENT = {
-    "speckit.orchestrate.orchestrator.agent.md": ORCHESTRATOR_PROMPT,
-    "speckit.orchestrate.architect.agent.md": ARCHITECT_PROMPT,
-    "speckit.orchestrate.code.agent.md": CODE_PROMPT,
-    "speckit.orchestrate.test.agent.md": TEST_PROMPT,
-    "speckit.orchestrate.review.agent.md": REVIEW_PROMPT,
+    "orchestrate-orchestrator.agent.md": ORCHESTRATOR_PROMPT,
+    "orchestrate-architect.agent.md": ARCHITECT_PROMPT,
+    "orchestrate-code-backend.agent.md": CODE_PROMPT,
+    "orchestrate-test.agent.md": TEST_PROMPT,
+    "orchestrate-review.agent.md": REVIEW_PROMPT,
 }
 
 # Map prompt filenames to their embedded content (for prompt/action files)
 ORCHESTRATE_PROMPT_FILE_CONTENT = {
-    "speckit.orchestrate.init.prompt.md": ORCH_PROMPT_INIT,
-    "speckit.orchestrate.run.prompt.md": ORCH_PROMPT_RUN,
-    "speckit.orchestrate.status.prompt.md": ORCH_PROMPT_STATUS,
+    "speckit.orchestrate-init.prompt.md": ORCH_PROMPT_INIT,
+    "speckit.orchestrate-run.prompt.md": ORCH_PROMPT_RUN,
+    "speckit.orchestrate-status.prompt.md": ORCH_PROMPT_STATUS,
 }
 
 
@@ -3429,7 +3429,7 @@ def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
     For Copilot, prompts are written to .github/prompts/.
     For all other agents, prompts are written to the agent command directory.
     Runtime orchestration sub-agents are created dynamically by
-    /speckit.orchestrate.init in .github/agents/ after project analysis.
+    /speckit.orchestrate-init in .github/agents/ after project analysis.
     """
     if agent_key == "copilot":
         # Copilot: action prompts go to .github/prompts/

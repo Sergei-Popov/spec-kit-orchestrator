@@ -144,7 +144,7 @@ specify init my-project --ai copilot --orchestrate
 Then describe your project:
 
 ```text
-/speckit.orchestrate.init Build a photo album app with drag-and-drop organization,
+/speckit.orchestrate-init Build a photo album app with drag-and-drop organization,
 tile previews, and local SQLite storage. Use Vite + vanilla JS.
 ```
 
@@ -157,8 +157,8 @@ The orchestrator will:
 Then execute:
 
 ```text
-/speckit.orchestrate.run     →  Agents implement, test, and review
-/speckit.orchestrate.status  →  Check progress anytime
+/speckit.orchestrate-run     →  Agents implement, test, and review
+/speckit.orchestrate-status  →  Check progress anytime
 ```
 
 ## 📽️ Video Overview
