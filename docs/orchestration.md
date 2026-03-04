@@ -32,6 +32,15 @@ Run the orchestration init command in your AI assistant:
 /speckit.orchestrate-init Set up orchestration with 2 code agents
 ```
 
+### Option C: Unsupported provider (generic mode)
+
+If your provider is not in the built-in `--ai` list (for example Z.AI), install
+commands with `generic` and a custom commands directory:
+
+```bash
+specify init my-project --ai generic --ai-commands-dir .zai/commands --orchestrate
+```
+
 ## Workflow
 
 ### Orchestration commands
