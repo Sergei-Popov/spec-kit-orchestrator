@@ -164,13 +164,11 @@ The commands embody SDD principles by treating specifications as executable arti
 
 ### Multi-Agent Orchestration (Alternative to Step 6)
 
-For larger features, you can replace the single-agent `/speckit.implement` with multi-agent orchestration. After completing `/speckit.tasks`, run:
+For larger features, you can replace the single-agent `/speckit.implement` with multi-agent orchestration. Instead of running each `/speckit.*` command manually, describe your project to the orchestrator and it handles the entire lifecycle:
 
-1. `/speckit.orchestrate.init` — Configure your agent team and autonomy mode.
-2. `/speckit.orchestrate.assign` — The orchestrator analyzes your tasks and creates work packages, assigning each to the best-suited agent role (Architect, Code, Test, or Review).
-3. `/speckit.orchestrate.run` — Execute the coordination plan. The orchestrator manages dependencies, parallelism, and checkpoints.
-4. `/speckit.orchestrate.review` — The Review Agent examines completed work and issues APPROVE or REQUEST_CHANGES verdicts.
-5. `/speckit.orchestrate.sync` — Merge outputs from parallel Code Agents and resolve any file conflicts.
+1. `/speckit.orchestrate.init <description>` — Analyzes your project description, activates the right agent team, and generates constitution, spec, plan, tasks, and coordination automatically by delegating to the Architect Agent.
+2. `/speckit.orchestrate.run` — Executes the coordination plan with agent role-switching. Agents implement, test, and review the work.
+3. `/speckit.orchestrate.status` — Read-only progress view you can check anytime.
 
 This approach is especially effective for features with 20+ tasks spanning multiple domains (backend, frontend, data layer, tests). See `docs/orchestration.md` for the full guide.
 
