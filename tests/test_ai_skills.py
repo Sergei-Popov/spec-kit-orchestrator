@@ -709,19 +709,40 @@ class TestCliValidation:
 
         with patch("specify_cli.select_with_arrows", return_value="generic"), \
              patch("specify_cli.download_and_extract_template") as mock_download, \
+             patch("specify_cli._setup_orchestration") as mock_setup_orchestration, \
              patch("specify_cli.ensure_executable_scripts"), \
              patch("specify_cli.ensure_constitution_from_template"), \
              patch("specify_cli.is_git_repo", return_value=False), \
              patch("specify_cli.shutil.which", return_value="/usr/bin/git"):
             result = runner.invoke(
                 app,
-                ["init", str(target), "--ignore-agent-tools", "--script", "sh", "--no-git"],
-                input=".myagent/commands/\n",
+                ["init", str(target), "--ignore-agent-tools", "--script", "sh", "--no-git", "--orchestrate"],
+                input="  .myagent/commands  \n",
             )
 
         assert result.exit_code == 0
         assert mock_download.called
         assert mock_download.call_args.args[1] == "generic"
+        assert mock_setup_orchestration.call_args.kwargs["ai_commands_dir"] == ".myagent/commands"
+
+    def test_interactive_generic_rejects_flag_like_ai_commands_dir(self, tmp_path):
+        """Interactive generic selection should reject flag-like commands dir values."""
+        from typer.testing import CliRunner
+
+        runner = CliRunner()
+        target = tmp_path / "generic-interactive-proj-invalid"
+
+        with patch("specify_cli.select_with_arrows", return_value="generic"), \
+             patch("specify_cli.download_and_extract_template"), \
+             patch("specify_cli.shutil.which", return_value="/usr/bin/git"):
+            result = runner.invoke(
+                app,
+                ["init", str(target), "--ignore-agent-tools", "--script", "sh", "--no-git"],
+                input="--here\n",
+            )
+
+        assert result.exit_code == 1
+        assert "Invalid value for --ai-commands-dir" in result.output
 
 
 class TestParameterOrderingIssue:

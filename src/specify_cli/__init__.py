@@ -1390,15 +1390,16 @@ def init(
     # Validate --ai-commands-dir usage
     if selected_ai == "generic":
         if not ai_commands_dir:
-            ai_commands_dir = typer.prompt("Enter directory for generic agent commands (e.g. .myagent/commands)")
+            ai_commands_dir = typer.prompt("Enter relative directory for generic agent commands (e.g. .myagent/commands)")
             ai_commands_dir = ai_commands_dir.strip()
         if not ai_commands_dir:
             console.print("[red]Error:[/red] --ai-commands-dir is required when using --ai generic")
-            console.print("[dim]Example: specify init my-project --ai generic --ai-commands-dir .myagent/commands/[/dim]")
+            console.print("[dim]Example: specify init my-project --ai generic --ai-commands-dir .myagent/commands[/dim]")
             raise typer.Exit(1)
         if ai_commands_dir.startswith("--"):
             console.print(f"[red]Error:[/red] Invalid value for --ai-commands-dir: '{ai_commands_dir}'")
-            console.print("[yellow]Example:[/yellow] specify init --ai generic --ai-commands-dir .myagent/commands/")
+            console.print("[yellow]Hint:[/yellow] This looks like another CLI flag, not a directory path.")
+            console.print("[yellow]Example:[/yellow] specify init --ai generic --ai-commands-dir .myagent/commands")
             raise typer.Exit(1)
     elif ai_commands_dir:
         console.print(f"[red]Error:[/red] --ai-commands-dir can only be used with --ai generic (not '{selected_ai}')")
