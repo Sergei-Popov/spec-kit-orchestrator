@@ -32,6 +32,7 @@ import tempfile
 import shutil
 import shlex
 import json
+import re
 import yaml
 from pathlib import Path
 from typing import Optional, Tuple
@@ -3920,13 +3921,9 @@ def _apply_orchestrate_script_type(content: str, script_type: str) -> str:
     if script_type != "ps":
         return content
 
-    replacements = {
-        '```bash\nbash .specify/scripts/bash/create-new-feature.sh "{feature-name}"\n```': '```powershell\n.specify/scripts/powershell/create-new-feature.ps1 "{feature-name}"\n```',
-        '```bash\nbash .specify/scripts/bash/create-new-feature.sh "feature-name"\n```': '```powershell\n.specify/scripts/powershell/create-new-feature.ps1 "feature-name"\n```',
-    }
-    for old, new in replacements.items():
-        content = content.replace(old, new)
-    return content
+    pattern = r'```bash\nbash \.specify/scripts/bash/create-new-feature\.sh (?P<args>".+?")\n```'
+    replacement = r'```powershell\n.specify/scripts/powershell/create-new-feature.ps1 \g<args>\n```'
+    return re.sub(pattern, replacement, content)
 
 
 def _setup_orchestration(project_path: Path, agent: str, script_type: str, ai_commands_dir: str | None = None) -> None:
