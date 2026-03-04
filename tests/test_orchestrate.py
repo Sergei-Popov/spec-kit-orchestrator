@@ -157,9 +157,9 @@ class TestSlashCommandsCopilot:
         # Copilot: action PROMPT files go to .github/prompts/
         prompts_dir = project_dir / ".github" / "prompts"
         expected = [
-            "speckit.orchestrate.init.prompt.md",
-            "speckit.orchestrate.run.prompt.md",
-            "speckit.orchestrate.status.prompt.md",
+            "speckit.orchestrate-init.prompt.md",
+            "speckit.orchestrate-run.prompt.md",
+            "speckit.orchestrate-status.prompt.md",
         ]
         for filename in expected:
             assert (prompts_dir / filename).exists(), f"{filename} not found"
@@ -185,7 +185,7 @@ class TestSlashCommandsClaude:
     def test_claude_prompt_files_installed(self, project_dir):
         _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
-        prompt_files = list(commands_dir.glob("speckit.orchestrate.*.prompt.md"))
+        prompt_files = list(commands_dir.glob("speckit.orchestrate-*.prompt.md"))
         assert len(prompt_files) == 3
 
 
@@ -387,4 +387,4 @@ class TestOrchestrateWithNoGit:
         # Verify only orchestration prompts are present
         commands_dir = project_dir / ".claude" / "commands"
         assert len(list(commands_dir.glob("speckit.orchestrate.*.agent.md"))) == 0
-        assert len(list(commands_dir.glob("speckit.orchestrate.*.prompt.md"))) == 3
+        assert len(list(commands_dir.glob("speckit.orchestrate-*.prompt.md"))) == 3
