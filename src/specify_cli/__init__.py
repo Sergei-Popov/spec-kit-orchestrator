@@ -3905,6 +3905,23 @@ ORCHESTRATE_AGENT_PROMPT_FILE_CONTENT = {
     "speckit.orchestrate-status.agent.md": ORCH_AGENT_STATUS,
 }
 
+ORCHESTRATE_PROMPT_AGENT_OVERRIDES = {
+    "opencode": "general",
+}
+
+
+def _apply_orchestrate_prompt_agent_override(content: str, target_agent: str) -> str:
+    """Override prompt frontmatter `agent:` for providers with fixed agent names."""
+    lines = content.splitlines()
+    for idx, line in enumerate(lines):
+        if line.startswith("agent: "):
+            lines[idx] = f"agent: {target_agent}"
+            break
+    updated = "\n".join(lines)
+    if content.endswith("\n"):
+        updated += "\n"
+    return updated
+
 
 def _setup_orchestration(project_path: Path, agent: str, script_type: str, ai_commands_dir: str | None = None) -> None:
     """Set up multi-agent orchestration scaffolding inside the project."""
@@ -4076,8 +4093,12 @@ def _install_orchestrate_commands(project_path: Path, agent_key: str, ai_command
         prompts_dir = commands_dir
     prompts_dir.mkdir(parents=True, exist_ok=True)
 
+    prompt_agent_override = ORCHESTRATE_PROMPT_AGENT_OVERRIDES.get(agent_key)
+
     # Write prompt/action files
     for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():
+        if prompt_agent_override:
+            content = _apply_orchestrate_prompt_agent_override(content, prompt_agent_override)
         (prompts_dir / filename).write_text(content, encoding="utf-8")
 
 
