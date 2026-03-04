@@ -7,6 +7,22 @@ Recent changes to the Specify CLI and templates are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.19] - 2026-03-04
+
+### Changed
+
+- Separated orchestration files into agent definitions (`.agent.md`) and prompt files (`.prompt.md`)
+- `_install_orchestrate_commands()` now writes 5 agent files and 3 prompt files
+- For Copilot: agent files go to `.github/agents/`, prompt files go to `.github/prompts/`
+- For other agents: all orchestration files go to the agent's commands directory
+- Updated `ORCHESTRATE_TEMPLATE_FILES` and `ORCHESTRATOR_AGENT_FILES` with new naming convention
+- Replaced `ORCH_CMD_*` constants with `ORCH_PROMPT_*` constants containing updated prompt content
+
+### Removed
+
+- `ORCH_CMD_INIT`, `ORCH_CMD_RUN`, `ORCH_CMD_STATUS` constants (replaced by `ORCH_PROMPT_INIT`, `ORCH_PROMPT_RUN`, `ORCH_PROMPT_STATUS`)
+- `ORCHESTRATE_CMD_CONTENT` dict (replaced by `ORCHESTRATE_AGENT_FILE_CONTENT` and `ORCHESTRATE_PROMPT_FILE_CONTENT`)
+
 ## [0.1.18] - 2026-03-04
 
 ### Changed

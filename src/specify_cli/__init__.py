@@ -2395,17 +2395,17 @@ ORCHESTRATE_COMMANDS = {
 }
 
 ORCHESTRATE_TEMPLATE_FILES = [
-    "speckit.orchestrate.init.md",
-    "speckit.orchestrate.run.md",
-    "speckit.orchestrate.status.md",
+    "speckit.orchestrate.init.prompt.md",
+    "speckit.orchestrate.run.prompt.md",
+    "speckit.orchestrate.status.prompt.md",
 ]
 
 ORCHESTRATOR_AGENT_FILES = [
-    "orchestrator.md",
-    "architect.md",
-    "code.md",
-    "test.md",
-    "review.md",
+    "speckit.orchestrate.orchestrator.agent.md",
+    "speckit.orchestrate.architect.agent.md",
+    "speckit.orchestrate.code.agent.md",
+    "speckit.orchestrate.test.agent.md",
+    "speckit.orchestrate.review.agent.md",
 ]
 
 # ── Embedded agent prompt templates ──────────────────────────────────────────
@@ -2639,167 +2639,132 @@ ORCHESTRATOR_AGENT_CONTENT = {
     "review.md": REVIEW_PROMPT,
 }
 
-# ── Embedded orchestrate slash-command templates ─────────────────────────────
+# ── Embedded orchestrate prompt templates ────────────────────────────────────
 
-ORCH_CMD_INIT = """\
-You are the Orchestrator Agent for a spec-driven development project.
-Your role is to manage a virtual development team through the entire
-software development lifecycle.
+ORCH_PROMPT_INIT = """\
+---
+name: "Initialize Orchestration"
+description: "Analyze project requirements and set up the agent team for coordinated development"
+---
 
-Read `.specify/orchestrator/agents/orchestrator.md` for your full role definition.
-Read `.specify/orchestrator/orchestrator-config.yml` for team configuration.
+Activate the Orchestrator Agent from `.github/agents/speckit.orchestrate.orchestrator.agent.md`.
+
+Read `.specify/orchestrator/orchestrator-config.yml` for current team configuration.
 Read `.specify/memory/constitution.md` if it exists.
 
-The user will describe what they want to build. Your job:
+The user will describe what they want to build. Follow the Orchestrator's Phase 0 — Project Setup:
 
-1. ANALYZE the request — determine project scope, complexity, domains involved.
+1. Analyze the description — determine scope, complexity, domains.
+2. Activate agents per the activation rules in the Orchestrator Agent definition.
+3. Delegate to Architect Agent (`.github/agents/speckit.orchestrate.architect.agent.md`):
+   - Create constitution.md using `.specify/templates/constitution-template.md`
+   - Create spec.md using `.specify/templates/spec-template.md`
+   - Ask user max 3 clarifying questions if requirements are ambiguous
+   - Create plan.md using `.specify/templates/plan-template.md`
+4. Generate tasks.md using `.specify/templates/tasks-template.md`
+5. Break tasks into work packages → write `specs/{feature}/agent-coordination.yml`
+6. Present the full plan:
 
-2. ACTIVATE AGENTS based on the project needs:
-   - Always activate: Architect Agent, at least 1 Code Agent, Review Agent.
-   - If the user mentions tests, API, data, or quality: activate Test Agent.
-   - If the project spans multiple domains (backend + frontend, or API + UI + DB):
-     activate multiple Code Agents and assign each a domain.
+   ## Project Analysis
+   Scope and complexity assessment.
 
-3. SET UP THE PROJECT by orchestrating the standard spec-kit flow:
-   - Call the Architect Agent to define constitution principles based on
-     the user's description. Write `.specify/memory/constitution.md`.
-   - Call the Architect Agent to create the specification.
-     Write `specs/NNN-feature/spec.md`.
-   - Ask the user clarifying questions (max 3) if requirements are ambiguous.
-   - Call the Architect Agent to create the technical plan.
-     Write `specs/NNN-feature/plan.md`.
-   - Generate tasks and assign them to work packages.
-     Write `specs/NNN-feature/tasks.md` and `specs/NNN-feature/agent-coordination.yml`.
+   ## Agent Team
+   | Role | Count | Domain | Rationale |
+   |------|-------|--------|-----------|
 
-4. PRESENT THE PLAN to the user:
-   - Show which agents are activated and why.
-   - Show the work package breakdown with dependencies.
-   - Show the execution phases (sequential and parallel).
-   - Ask for approval before proceeding to implementation.
+   ## Work Packages
+   | WP | Agent | Tasks | Dependencies | Phase |
+   |----|-------|-------|-------------|-------|
 
-5. After approval, tell the user to run `/speckit.orchestrate.run` to start execution.
-
-<output_format>
-Structure your response as:
-
-## Project Analysis
-Brief assessment of scope and complexity (2-3 sentences).
-
-## Agent Team
-Table: Agent Role | Count | Assigned Domains | Rationale
-
-## Development Plan
-The constitution, spec, plan, and tasks you generated — summarized as key decisions.
-
-## Work Packages
-Table: WP-ID | Agent | Tasks | Dependencies | Phase
-
-## Next Step
-Tell user to review and run /speckit.orchestrate.run
-</output_format>
+7. Ask user to approve, then tell them to run `/speckit.orchestrate.run`.
 
 $ARGUMENTS
 """
 
-ORCH_CMD_RUN = """\
-You are the Orchestrator Agent executing a coordination plan.
+ORCH_PROMPT_RUN = """\
+---
+name: "Run Orchestration"
+description: "Execute the coordination plan — agents implement, test, and review the feature"
+---
 
-Read these files:
-- `.specify/memory/constitution.md`
+Activate the Orchestrator Agent from `.github/agents/speckit.orchestrate.orchestrator.agent.md`.
+
+Read:
 - `.specify/orchestrator/orchestrator-config.yml`
-- `specs/{active_feature}/spec.md`
-- `specs/{active_feature}/plan.md`
-- `specs/{active_feature}/tasks.md`
 - `specs/{active_feature}/agent-coordination.yml`
-- `.specify/orchestrator/agents/*.md` — all agent role definitions
+- `specs/{active_feature}/tasks.md`
+- All agent definitions in `.github/agents/speckit.orchestrate.*.agent.md`
 
-If `specs/{active_feature}/orchestrator-state.yml` exists, resume from last
-completed work package.
-
-<execution_loop>
+If `specs/{active_feature}/orchestrator-state.yml` exists, resume from last completed package.
 
 For each phase in agent-coordination.yml:
 
-PHASE START:
-- Print: "=== Phase N: {name} ==="
-- List work packages in this phase.
+1. Print phase header: `=== Phase N: {name} ===`
+2. For each work package in this phase:
+   a. Print: `>>> WP-NNN: {title} [Agent: {role}]`
+   b. Load the agent definition from `.github/agents/speckit.orchestrate.{role}.agent.md`
+   c. BECOME that agent — follow its responsibilities, constraints, output format
+   d. Execute all tasks in the package
+   e. Print completion summary per agent's output format
+   f. Update `specs/{active_feature}/orchestrator-state.yml`
+   g. Return to Orchestrator role
+3. After phase completion:
+   - If implementation happened: run test suite
+   - Print phase summary table
+   - Mode check:
+     - supervised → ask: approve / retry WP-NNN / abort
+     - semi-auto → ask: continue to next phase / abort
+     - autonomous → continue (pause only on test failure or CRITICAL finding)
 
-FOR EACH WORK PACKAGE:
-1. Print: ">>> Starting WP-NNN: {title} [Agent: {role}]"
-2. Read the agent's prompt template from .specify/orchestrator/agents/{role}.md
-3. BECOME that agent — adopt its role, constraints, and output format.
-4. Execute all tasks in the package following the agent's rules:
-   - For Code Agent: create/modify files per (create:)/(update:) markers.
-   - For Test Agent: generate test files, run test suite.
-   - For Architect Agent: produce review or refactoring plan.
-   - For Review Agent: review completed packages, issue verdict.
-5. After completing all tasks: print summary per agent's output format.
-6. Update orchestrator-state.yml with completion status.
-7. Switch back to Orchestrator role.
-
-PHASE END:
-- Run test suite if implementation happened in this phase.
-- Print phase summary table.
-- Mode check:
-  - supervised: ask user "approve / retry WP-NNN / abort"
-  - semi-auto: ask user "continue to next phase / abort"
-  - autonomous: continue automatically (pause only on test failure or CRITICAL finding)
-
-AFTER ALL PHASES:
-- Switch to Review Agent role.
-- Review all completed work packages.
-- If APPROVE: print final summary, mark feature as complete.
-- If REQUEST_CHANGES: list findings, loop back to relevant Code Agent packages.
-
-</execution_loop>
-
-<state_management>
-After every work package completion, write orchestrator-state.yml:
-```yaml
-feature: {feature_name}
-mode: {mode}
-started_at: {timestamp}
-current_phase: {N}
-work_packages:
-  WP-001:
-    status: completed  # pending | in_progress | completed | failed | blocked
-    agent: {role}
-    tasks_completed: [1, 2, 3]
-    tasks_remaining: []
-  WP-002:
-    status: in_progress
-    agent: code-1
-    tasks_completed: [4]
-    tasks_remaining: [5, 6]
-    current_task: 5
-```
-</state_management>
+After all phases:
+- Load Review Agent and review all completed packages
+- APPROVE → print final summary, mark feature complete
+- REQUEST_CHANGES → route findings back to Code Agent, re-run affected packages
 
 $ARGUMENTS
 """
 
-ORCH_CMD_STATUS = """\
-Read `specs/{active_feature}/orchestrator-state.yml` and
-`specs/{active_feature}/agent-coordination.yml`.
+ORCH_PROMPT_STATUS = """\
+---
+name: "Orchestration Status"
+description: "Display current progress of the orchestrated development workflow"
+---
+
+Read `specs/{active_feature}/orchestrator-state.yml` and `specs/{active_feature}/agent-coordination.yml`.
 
 Display:
-- Feature name and autonomy mode
-- Current phase (N/total)
-- Per work-package: status icon, agent, task progress
-- Overall progress percentage
-- Active blockers or errors
 
-If no state file exists, tell user to run /speckit.orchestrate.init first.
-Read-only — do not modify any files.
+## Orchestration Status: {feature_name}
+**Mode:** {mode} | **Phase:** {current}/{total}
+
+| WP | Agent | Status | Tasks | Details |
+|----|-------|--------|-------|---------|
+| WP-001 | architect | ✅ Complete | 3/3 | |
+| WP-002 | code-1 | 🔄 In Progress | 2/5 | Current: task 4 |
+| WP-003 | code-2 | ⏳ Blocked | 0/4 | Waiting on WP-001 |
+
+**Progress:** ████░░░░░░ 35% | **Elapsed:** 8m 12s
+
+If no state file exists, tell user to run `/speckit.orchestrate.init` first.
+Do NOT modify any files. Read-only.
 
 $ARGUMENTS
 """
 
-# Map command filenames to their embedded content
-ORCHESTRATE_CMD_CONTENT = {
-    "speckit.orchestrate.init.md": ORCH_CMD_INIT,
-    "speckit.orchestrate.run.md": ORCH_CMD_RUN,
-    "speckit.orchestrate.status.md": ORCH_CMD_STATUS,
+# Map agent filenames to their embedded content (for agent command files)
+ORCHESTRATE_AGENT_FILE_CONTENT = {
+    "speckit.orchestrate.orchestrator.agent.md": ORCHESTRATOR_PROMPT,
+    "speckit.orchestrate.architect.agent.md": ARCHITECT_PROMPT,
+    "speckit.orchestrate.code.agent.md": CODE_PROMPT,
+    "speckit.orchestrate.test.agent.md": TEST_PROMPT,
+    "speckit.orchestrate.review.agent.md": REVIEW_PROMPT,
+}
+
+# Map prompt filenames to their embedded content (for prompt/action files)
+ORCHESTRATE_PROMPT_FILE_CONTENT = {
+    "speckit.orchestrate.init.prompt.md": ORCH_PROMPT_INIT,
+    "speckit.orchestrate.run.prompt.md": ORCH_PROMPT_RUN,
+    "speckit.orchestrate.status.prompt.md": ORCH_PROMPT_STATUS,
 }
 
 
@@ -2911,20 +2876,40 @@ def _install_orchestrator_templates(project_path: Path) -> None:
 
 
 def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
-    """Install the three /speckit.orchestrate.* slash commands for the selected agent."""
+    """Install orchestrate agent and prompt files for the selected agent.
+
+    Writes 5 agent-role files and 3 prompt/action files.  For copilot the
+    agents go to ``<base>/agents/`` and prompts to ``<base>/prompts/``; for
+    all other agents both sets go to the agent's commands subdirectory.
+    """
     agent_config = AGENT_CONFIG.get(agent_key, {})
     agent_folder = agent_config.get("folder", "")
     commands_subdir = agent_config.get("commands_subdir", "commands")
 
     if agent_folder:
-        commands_dir = project_path / agent_folder.rstrip("/") / commands_subdir
+        base_dir = project_path / agent_folder.rstrip("/")
     else:
-        commands_dir = project_path / commands_subdir
+        base_dir = project_path
 
-    commands_dir.mkdir(parents=True, exist_ok=True)
+    # Determine directories based on agent type
+    agents_dir = base_dir / commands_subdir
+    agents_dir.mkdir(parents=True, exist_ok=True)
 
-    for filename, content in ORCHESTRATE_CMD_CONTENT.items():
-        (commands_dir / filename).write_text(content, encoding="utf-8")
+    if commands_subdir == "agents":
+        # Copilot pattern: prompts go to a separate "prompts" directory
+        prompts_dir = base_dir / "prompts"
+    else:
+        # All other agents: prompts go to the same commands directory
+        prompts_dir = agents_dir
+    prompts_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write agent role files
+    for filename, content in ORCHESTRATE_AGENT_FILE_CONTENT.items():
+        (agents_dir / filename).write_text(content, encoding="utf-8")
+
+    # Write prompt/action files
+    for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():
+        (prompts_dir / filename).write_text(content, encoding="utf-8")
 
 
 def main():
