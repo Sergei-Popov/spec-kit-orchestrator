@@ -24,6 +24,8 @@ from typer.testing import CliRunner
 
 runner = CliRunner()
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
 
 # ===== Fixtures =====
 
@@ -177,13 +179,13 @@ class TestSlashCommandsClaude:
 
 class TestConfigTemplateYaml:
     def test_template_parses_without_error(self):
-        template_path = Path(__file__).resolve().parent.parent / "templates" / "orchestrator" / "orchestrator-config-template.yml"
+        template_path = REPO_ROOT / "templates" / "orchestrator" / "orchestrator-config-template.yml"
         content = template_path.read_text(encoding="utf-8")
         data = yaml.safe_load(content)
         assert isinstance(data, dict)
 
     def test_template_has_expected_keys(self):
-        template_path = Path(__file__).resolve().parent.parent / "templates" / "orchestrator" / "orchestrator-config-template.yml"
+        template_path = REPO_ROOT / "templates" / "orchestrator" / "orchestrator-config-template.yml"
         data = yaml.safe_load(template_path.read_text(encoding="utf-8"))
         for key in ("feature", "mode", "agents", "checkpoints", "quality_gates"):
             assert key in data, f"Template missing key: {key}"
