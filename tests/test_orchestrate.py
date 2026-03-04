@@ -16,6 +16,7 @@ from specify_cli import (
     ORCHESTRATE_COMMANDS,
     ORCHESTRATE_TEMPLATE_FILES,
     ORCHESTRATOR_AGENT_FILES,
+    COPILOT_ORCHESTRATE_AGENT_FILES,
     AGENT_CONFIG,
     app,
 )
@@ -149,17 +150,32 @@ class TestAgentPromptTemplatesInstalled:
 # ===== Test 6: slash commands installed for copilot =====
 
 class TestSlashCommandsCopilot:
-    def test_copilot_commands_installed(self, project_dir):
+    def test_copilot_agent_roles_installed(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
-        # Copilot uses .github/agents/ (commands_subdir = "agents")
-        commands_dir = project_dir / ".github" / "agents"
+        # Copilot: agent ROLE files go to .github/agents/
+        agents_dir = project_dir / ".github" / "agents"
+        for filename in COPILOT_ORCHESTRATE_AGENT_FILES:
+            assert (agents_dir / filename).exists(), f"{filename} not found"
+
+    def test_copilot_action_prompts_installed(self, project_dir):
+        _install_orchestrate_commands(project_dir, "copilot")
+        # Copilot: action PROMPT files go to .github/prompts/
+        prompts_dir = project_dir / ".github" / "prompts"
         expected = [
-            "speckit.orchestrate.init.md",
-            "speckit.orchestrate.run.md",
-            "speckit.orchestrate.status.md",
+            "speckit.orchestrate.init.prompt.md",
+            "speckit.orchestrate.run.prompt.md",
+            "speckit.orchestrate.status.prompt.md",
         ]
         for filename in expected:
-            assert (commands_dir / filename).exists(), f"{filename} not found"
+            assert (prompts_dir / filename).exists(), f"{filename} not found"
+
+    def test_copilot_no_action_files_in_agents_dir(self, project_dir):
+        _install_orchestrate_commands(project_dir, "copilot")
+        # init/run/status must NOT be in .github/agents/
+        agents_dir = project_dir / ".github" / "agents"
+        for name in ("init", "run", "status"):
+            assert not (agents_dir / f"speckit.orchestrate.{name}.md").exists()
+            assert not (agents_dir / f"speckit.orchestrate.{name}.agent.md").exists()
 
 
 # ===== Test 7: slash commands installed for claude =====

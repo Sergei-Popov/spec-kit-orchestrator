@@ -7,6 +7,15 @@ Recent changes to the Specify CLI and templates are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.19] - 2026-03-04
+
+### Fixed
+
+- Fixed Copilot orchestration file placement: agent ROLE files (orchestrator, architect, code, test, review) now go to `.github/agents/` as `.agent.md` files
+- Action commands (init, run, status) now go to `.github/prompts/` as `.prompt.md` files for Copilot, matching the convention where agents/ holds role definitions and prompts/ holds action instructions
+- Added `COPILOT_ORCHESTRATE_AGENT_FILES` and `COPILOT_ORCHESTRATE_AGENT_CONTENT` constants for the 5 Copilot-specific agent role templates
+- Updated Copilot orchestration templates in `templates/copilot/` to match the new structure
+
 ## [0.1.18] - 2026-03-04
 
 ### Changed
