@@ -7,6 +7,15 @@ Recent changes to the Specify CLI and templates are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.21] - 2026-03-04
+
+### Fixed
+
+- Fixed orchestration run agent telling the user to open a new Copilot Chat session instead of delegating automatically
+- Updated `ORCH_AGENT_RUN` to use explicit handoff-based delegation instead of abstract `provider_capabilities.task_tool` reference
+- Updated `ORCH_PROMPT_RUN` to support both handoff delegation (Copilot) and task_tool delegation (other agents)
+- Added explicit "DO NOT ask the user to open a new session" instructions to prevent fallback to manual delegation
+
 ## [0.1.20] - 2026-03-04
 
 ### Fixed
