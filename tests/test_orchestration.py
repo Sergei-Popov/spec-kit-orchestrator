@@ -195,6 +195,22 @@ class TestInstallOrchestrateCommands:
         content = agent_path.read_text(encoding="utf-8")
         assert "mode: speckit.orchestrate-init" in content
 
+    def test_copilot_init_prompt_uses_powershell_script_when_selected(self, project_dir):
+        _install_orchestrate_commands(project_dir, "copilot", script_type="ps")
+        prompt_path = project_dir / ".github" / "prompts" / "speckit.orchestrate-init.prompt.md"
+        content = prompt_path.read_text(encoding="utf-8")
+        assert "```powershell" in content
+        assert '.specify/scripts/powershell/create-new-feature.ps1 "feature-name"' in content
+        assert 'bash .specify/scripts/powershell/create-new-feature.ps1 "feature-name"' not in content
+        assert ".specify/scripts/bash/create-new-feature.sh" not in content
+
+    def test_copilot_init_agent_uses_powershell_script_when_selected(self, project_dir):
+        _install_orchestrate_commands(project_dir, "copilot", script_type="ps")
+        agent_path = project_dir / ".github" / "agents" / "speckit.orchestrate-init.agent.md"
+        content = agent_path.read_text(encoding="utf-8")
+        assert '.specify/scripts/powershell/create-new-feature.ps1 "{feature-name}"' in content
+        assert ".specify/scripts/bash/create-new-feature.sh" not in content
+
     def test_gemini_uses_commands_subdir(self, project_dir):
         _install_orchestrate_commands(project_dir, "gemini")
         commands_dir = project_dir / ".gemini" / "commands"

@@ -32,6 +32,7 @@ import tempfile
 import shutil
 import shlex
 import json
+import re
 import yaml
 from pathlib import Path
 from typing import Optional, Tuple
@@ -3915,6 +3916,19 @@ def _apply_orchestrate_prompt_agent_override(content: str, target_agent: str) ->
     return updated
 
 
+def _apply_orchestrate_script_type(content: str, script_type: str) -> str:
+    """Adjust orchestration prompts to use the selected script variant."""
+    if script_type != "ps":
+        return content
+
+    # Orchestrate init templates embed a fenced block that explicitly runs:
+    # `bash .specify/scripts/bash/create-new-feature.sh ...`
+    # Rewrite only that known snippet for PowerShell projects.
+    pattern = r'```bash\nbash \.specify/scripts/bash/create-new-feature\.sh (?P<args>[^\n]+)\n```'
+    replacement = r'```powershell\n.specify/scripts/powershell/create-new-feature.ps1 \g<args>\n```'
+    return re.sub(pattern, replacement, content)
+
+
 def _setup_orchestration(project_path: Path, agent: str, script_type: str, ai_commands_dir: str | None = None) -> None:
     """Set up multi-agent orchestration scaffolding inside the project."""
     console.print(Panel(
@@ -3930,7 +3944,7 @@ def _setup_orchestration(project_path: Path, agent: str, script_type: str, ai_co
 
     _generate_orchestrator_config(project_path, team)
     _install_orchestrator_templates(project_path)
-    _install_orchestrate_commands(project_path, agent, ai_commands_dir=ai_commands_dir)
+    _install_orchestrate_commands(project_path, agent, script_type=script_type, ai_commands_dir=ai_commands_dir)
 
     console.print("[bold green]✓[/bold green] Orchestration scaffolding created")
 
@@ -4025,7 +4039,7 @@ def _install_orchestrator_templates(project_path: Path) -> None:
         (agents_dir / filename).write_text(content, encoding="utf-8")
 
 
-def _install_orchestrate_commands(project_path: Path, agent_key: str, ai_commands_dir: str | None = None) -> None:
+def _install_orchestrate_commands(project_path: Path, agent_key: str, script_type: str = "sh", ai_commands_dir: str | None = None) -> None:
     """Install orchestration command files for the selected agent.
 
     For Copilot, install matching .agent.md role files in .github/agents/ and
@@ -4041,8 +4055,10 @@ def _install_orchestrate_commands(project_path: Path, agent_key: str, ai_command
         agents_dir.mkdir(parents=True, exist_ok=True)
         prompts_dir.mkdir(parents=True, exist_ok=True)
         for filename, content in ORCHESTRATE_AGENT_PROMPT_FILE_CONTENT.items():
+            content = _apply_orchestrate_script_type(content, script_type)
             (agents_dir / filename).write_text(content, encoding="utf-8")
         for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():
+            content = _apply_orchestrate_script_type(content, script_type)
             (prompts_dir / filename).write_text(content, encoding="utf-8")
         return
 
@@ -4050,6 +4066,7 @@ def _install_orchestrate_commands(project_path: Path, agent_key: str, ai_command
         commands_dir = project_path / ai_commands_dir
         commands_dir.mkdir(parents=True, exist_ok=True)
         for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():
+            content = _apply_orchestrate_script_type(content, script_type)
             (commands_dir / filename).write_text(content, encoding="utf-8")
         return
 
@@ -4077,6 +4094,7 @@ def _install_orchestrate_commands(project_path: Path, agent_key: str, ai_command
 
     # Write prompt/action files
     for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():
+        content = _apply_orchestrate_script_type(content, script_type)
         if prompt_agent_override:
             content = _apply_orchestrate_prompt_agent_override(content, prompt_agent_override)
         (prompts_dir / filename).write_text(content, encoding="utf-8")
