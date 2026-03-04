@@ -9,19 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.19] - 2026-03-04
 
-### Changed
+### Fixed
 
-- Separated orchestration files into agent definitions (`.agent.md`) and prompt files (`.prompt.md`)
-- `_install_orchestrate_commands()` now writes 5 agent files and 3 prompt files
-- For Copilot: agent files go to `.github/agents/`, prompt files go to `.github/prompts/`
-- For other agents: all orchestration files go to the agent's commands directory
-- Updated `ORCHESTRATE_TEMPLATE_FILES` and `ORCHESTRATOR_AGENT_FILES` with new naming convention
-- Replaced `ORCH_CMD_*` constants with `ORCH_PROMPT_*` constants containing updated prompt content
-
-### Removed
-
-- `ORCH_CMD_INIT`, `ORCH_CMD_RUN`, `ORCH_CMD_STATUS` constants (replaced by `ORCH_PROMPT_INIT`, `ORCH_PROMPT_RUN`, `ORCH_PROMPT_STATUS`)
-- `ORCHESTRATE_CMD_CONTENT` dict (replaced by `ORCHESTRATE_AGENT_FILE_CONTENT` and `ORCHESTRATE_PROMPT_FILE_CONTENT`)
+- Fixed Copilot orchestration file placement: agent ROLE files (orchestrator, architect, code, test, review) now go to `.github/agents/` as `.agent.md` files
+- Action commands (init, run, status) now go to `.github/prompts/` as `.prompt.md` files for Copilot, matching the convention where agents/ holds role definitions and prompts/ holds action instructions
+- Added `COPILOT_ORCHESTRATE_AGENT_FILES` and `COPILOT_ORCHESTRATE_AGENT_CONTENT` constants for the 5 Copilot-specific agent role templates
+- Updated Copilot orchestration templates in `templates/copilot/` to match the new structure
 
 ## [0.1.18] - 2026-03-04
 

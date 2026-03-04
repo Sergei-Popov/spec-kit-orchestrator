@@ -22,8 +22,7 @@ from specify_cli import (
     ORCHESTRATE_COMMANDS,
     ORCHESTRATE_TEMPLATE_FILES,
     ORCHESTRATOR_AGENT_FILES,
-    ORCHESTRATE_AGENT_FILE_CONTENT,
-    ORCHESTRATE_PROMPT_FILE_CONTENT,
+    COPILOT_ORCHESTRATE_AGENT_FILES,
     AGENT_CONFIG,
     app,
 )
@@ -174,17 +173,17 @@ class TestInstallOrchestrateCommands:
         actual = {f.name for f in commands_dir.glob("speckit.orchestrate.*.agent.md")}
         assert actual == expected
 
-    def test_copilot_agents_in_agents_subdir(self, project_dir):
+    def test_copilot_agent_roles_in_agents_dir(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
         agents_dir = project_dir / ".github" / "agents"
-        md_files = list(agents_dir.glob("speckit.orchestrate.*.agent.md"))
-        assert len(md_files) == 5
+        agent_files = list(agents_dir.glob("speckit.orchestrate.*.agent.md"))
+        assert len(agent_files) == 5
 
-    def test_copilot_prompts_in_prompts_subdir(self, project_dir):
+    def test_copilot_action_prompts_in_prompts_dir(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
         prompts_dir = project_dir / ".github" / "prompts"
-        md_files = list(prompts_dir.glob("speckit.orchestrate.*.prompt.md"))
-        assert len(md_files) == 3
+        prompt_files = list(prompts_dir.glob("speckit.orchestrate.*.prompt.md"))
+        assert len(prompt_files) == 3
 
     def test_gemini_uses_commands_subdir(self, project_dir):
         _install_orchestrate_commands(project_dir, "gemini")
@@ -246,12 +245,19 @@ class TestEmbeddedContentWrittenWithoutTemplateFiles:
 
     def test_prompt_files_written_in_empty_project(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
-        prompts_dir = project_dir / ".github" / "prompts"
-        for filename in ORCHESTRATE_TEMPLATE_FILES:
-            path = prompts_dir / filename
+        # Copilot: agent roles in .github/agents/
+        agents_dir = project_dir / ".github" / "agents"
+        for filename in COPILOT_ORCHESTRATE_AGENT_FILES:
+            path = agents_dir / filename
             assert path.exists(), f"{filename} missing"
+            assert len(path.read_text(encoding="utf-8")) > 50, f"{filename} too short"
+        # Copilot: action prompts in .github/prompts/
+        prompts_dir = project_dir / ".github" / "prompts"
+        for stem in ("init", "run", "status"):
+            path = prompts_dir / f"speckit.orchestrate.{stem}.prompt.md"
+            assert path.exists(), f"{path.name} missing"
             content = path.read_text(encoding="utf-8")
-            assert "$ARGUMENTS" in content, f"{filename} missing $ARGUMENTS"
+            assert "$ARGUMENTS" in content, f"{path.name} missing $ARGUMENTS"
 
     def test_all_three_artifacts_produced(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
