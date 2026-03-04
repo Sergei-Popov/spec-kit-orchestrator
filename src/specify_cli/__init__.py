@@ -3208,13 +3208,11 @@ def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
         # Copilot: action PROMPTS go to .github/prompts/
         prompts_dir = project_path / ".github" / "prompts"
         prompts_dir.mkdir(parents=True, exist_ok=True)
-        for filename, content in ORCHESTRATE_CMD_CONTENT.items():
-            stem = filename.removesuffix(".md")
-            prompt_name = f"{stem}.prompt.md"
+        for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():
             prompt_content = (
                 f"---\nagent: speckit.orchestrate.orchestrator\n---\n\n{content}"
             )
-            (prompts_dir / prompt_name).write_text(prompt_content, encoding="utf-8")
+            (prompts_dir / filename).write_text(prompt_content, encoding="utf-8")
         return
 
     agent_config = AGENT_CONFIG.get(agent_key, {})
