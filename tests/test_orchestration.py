@@ -209,6 +209,15 @@ class TestInstallOrchestrateCommands:
         assert len(list(custom_dir.glob("speckit.orchestrate-*.prompt.md"))) == 3
         assert not (project_dir / "commands").exists()
 
+    def test_opencode_prompts_use_general_agent(self, project_dir):
+        _install_orchestrate_commands(project_dir, "opencode")
+        commands_dir = project_dir / ".opencode" / "command"
+        prompt_files = list(commands_dir.glob("speckit.orchestrate-*.prompt.md"))
+        assert len(prompt_files) == 3
+        for cmd_file in prompt_files:
+            content = cmd_file.read_text(encoding="utf-8")
+            assert "agent: general" in content
+
 
 # ===== ORCHESTRATE_COMMANDS constant =====
 
