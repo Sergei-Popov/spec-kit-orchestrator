@@ -137,11 +137,11 @@ class TestInstallOrchestratorTemplates:
 # ===== Slash commands =====
 
 class TestInstallOrchestrateCommands:
-    def test_creates_six_command_files_for_claude(self, project_dir):
+    def test_creates_three_command_files_for_claude(self, project_dir):
         _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
         md_files = list(commands_dir.glob("speckit.orchestrate.*.md"))
-        assert len(md_files) == 6
+        assert len(md_files) == 3
 
     def test_command_files_have_content(self, project_dir):
         _install_orchestrate_commands(project_dir, "claude")
@@ -162,20 +162,20 @@ class TestInstallOrchestrateCommands:
         _install_orchestrate_commands(project_dir, "copilot")
         commands_dir = project_dir / ".github" / "agents"
         md_files = list(commands_dir.glob("speckit.orchestrate.*.md"))
-        assert len(md_files) == 6
+        assert len(md_files) == 3
 
     def test_gemini_uses_commands_subdir(self, project_dir):
         _install_orchestrate_commands(project_dir, "gemini")
         commands_dir = project_dir / ".gemini" / "commands"
         md_files = list(commands_dir.glob("speckit.orchestrate.*.md"))
-        assert len(md_files) == 6
+        assert len(md_files) == 3
 
 
 # ===== ORCHESTRATE_COMMANDS constant =====
 
 class TestOrchestrateCommandsConstant:
-    def test_has_six_commands(self):
-        assert len(ORCHESTRATE_COMMANDS) == 6
+    def test_has_three_commands(self):
+        assert len(ORCHESTRATE_COMMANDS) == 3
 
     def test_all_keys_start_with_orchestrate(self):
         for key in ORCHESTRATE_COMMANDS:
@@ -228,4 +228,4 @@ class TestEmbeddedContentWrittenWithoutTemplateFiles:
 
         assert (project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml").exists()
         assert len(list((project_dir / ".specify" / "orchestrator" / "agents").glob("*.md"))) == 5
-        assert len(list((project_dir / ".github" / "agents").glob("speckit.orchestrate.*.md"))) == 6
+        assert len(list((project_dir / ".github" / "agents").glob("speckit.orchestrate.*.md"))) == 3

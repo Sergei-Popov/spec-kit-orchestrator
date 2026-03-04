@@ -155,11 +155,8 @@ class TestSlashCommandsCopilot:
         commands_dir = project_dir / ".github" / "agents"
         expected = [
             "speckit.orchestrate.init.md",
-            "speckit.orchestrate.assign.md",
             "speckit.orchestrate.run.md",
             "speckit.orchestrate.status.md",
-            "speckit.orchestrate.review.md",
-            "speckit.orchestrate.sync.md",
         ]
         for filename in expected:
             assert (commands_dir / filename).exists(), f"{filename} not found"
@@ -172,7 +169,7 @@ class TestSlashCommandsClaude:
         _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
         md_files = list(commands_dir.glob("speckit.orchestrate.*.md"))
-        assert len(md_files) == 6
+        assert len(md_files) == 3
 
 
 # ===== Test 8: config template YAML is valid =====
