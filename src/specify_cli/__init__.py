@@ -2484,7 +2484,7 @@ Based on the project description, activate agents:
 
 <coordination_rules>
 - Update orchestrator-state.yml after EVERY state change.
-- Maintain `active_task_ids` in orchestrator-state.yml keyed by work-package ID so interrupted Task sessions can be resumed.
+- Maintain `active_task_ids` in orchestrator-state.yml keyed by work package ID so interrupted Task sessions can be resumed.
 - Never assign tasks outside an agent's capabilities.
 - Never skip review in supervised or semi-auto modes.
 - If Code Agent reports blocker → escalate to Architect.
@@ -3091,7 +3091,7 @@ work_packages:
   WP-001:
     title: "{title}"
     agent: "{role}"
-    subagent_type: general
+    subagent_type: general  # use explore only for read-only research packages
     tasks: [T001, T002, T003]
     dependencies: []
     phase: 1
@@ -3156,7 +3156,7 @@ mode: "{mode}"
 current_phase: "phase-1"
 work_packages: {}
 active_task_ids: {}
-next_action: "Describe the next verified user action"
+next_action: "Review generated artifacts in specs/001-{feature-name}/ and confirm readiness to execute phase 1"
 ```
 
 Rules:
@@ -3663,7 +3663,7 @@ mode: "{mode}"
 current_phase: "phase-1"
 work_packages: {}
 active_task_ids: {}
-next_action: "Describe the verified next manual action for the user"
+next_action: "Review generated artifacts in specs/001-feature-name/ and confirm readiness to execute phase 1"
 ```
 
 Rules:
