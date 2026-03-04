@@ -190,6 +190,7 @@ Want to see Spec Kit in action? Watch our [video overview](https://www.youtube.c
 | [SHAI (OVHcloud)](https://github.com/ovh/shai)                                       | ✅      |                                                                                                                                           |
 | [Windsurf](https://windsurf.com/)                                                    | ✅      |                                                                                                                                           |
 | [Antigravity (agy)](https://agy.ai/)                                                 | ✅      |                                                                                                                                           |
+| Z.AI and other unsupported providers                                                  | ✅      | Use `--ai generic --ai-commands-dir <path>` (for example, `.zai/commands`)                                                              |
 | Generic                                                                              | ✅      | Bring your own agent — use `--ai generic --ai-commands-dir <path>` for unsupported agents                                                 |
 
 > **Note:** All agents listed above support the orchestration feature. When `--orchestrate` is used, 3 additional `/speckit.orchestrate.*` commands are installed alongside the standard commands.

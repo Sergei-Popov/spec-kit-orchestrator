@@ -27,29 +27,10 @@ TASKS: {task_list}
 ````
 
 ### 2. Delegate to the Sub-Agent
-You CANNOT do the work yourself. You MUST delegate. Give the user these
-exact instructions:
-
-📋 ACTION REQUIRED:
-
-Open a new Copilot Chat session and reference the agent file:
-
-  @workspace Use the agent defined in `.github/agents/{agent_file_name}`
-
-Then give it this work package:
-
-  Execute work package {WP-ID}: {title}
-  Tasks: {numbered task list with file markers}
-
-  Read these files for context:
-  - `specs/{feature}/plan.md` (tech stack and architecture)
-  - `specs/{feature}/spec.md` (requirements)
-  - `.specify/memory/constitution.md` (principles)
-
-  After completing all tasks, report back with:
-  [WP-{ID}] COMPLETE — list of files created/modified
-
-When done, come back to THIS chat and tell me the result.
+You CANNOT do the work yourself. You MUST delegate using
+`provider_capabilities.task_tool` and a provider-valid `subagent_type`.
+Read these values from `.specify/orchestrator/orchestrator-config.yml`.
+Include package title, task list, and required context files.
 
 ### 3. Wait for the User to Report Back
 After the user confirms the sub-agent completed the work package:
@@ -71,39 +52,18 @@ PHASE {N} COMPLETE: {phase_name}
 Next phase: {N+1} — {next_phase_name}
 ──────────────────────────────────────────
 
-#### Mode-Based Pause
-- Supervised: Ask "Approve phase and continue? (yes / retry WP-NNN / abort)"
-- Semi-auto: Ask "Continue to next phase? (yes / abort)"
-- Autonomous: Continue immediately unless test failures exist
+#### Phase Pause (always required)
+- Ask: "Continue to next phase? (yes / adjust plan / abort)"
 
 ### 4. Handle Parallel Packages
-If the current phase has packages marked parallel, tell the user:
-
-📋 PARALLEL EXECUTION — Open multiple Copilot Chat sessions:
-
-Session 1: @workspace Use `.github/agents/{agent_1}`
-  → Execute WP-{X}: {title}
-
-Session 2: @workspace Use `.github/agents/{agent_2}`
-  → Execute WP-{Y}: {title}
-
-Run both simultaneously. Report back when BOTH are complete.
+If the current phase has packages marked parallel, launch one delegated task per
+package in parallel and track each session/task ID in `active_task_ids`.
 
 ### 5. After All Implementation Phases — Trigger Review
 📋 REVIEW PHASE:
-
-Open a new Copilot Chat session:
-
-  @workspace Use the agent defined in `.github/agents/orchestrate-review.agent.md`
-
-  Review all completed work packages:
-  {list of completed WPs with their file lists}
-
-  Check against:
-  - `specs/{feature}/spec.md` (acceptance criteria)
-  - `.specify/memory/constitution.md` (principles)
-
-  Issue verdict: APPROVE or REQUEST_CHANGES with findings table.
+Delegate review using `provider_capabilities.task_tool`.
+Provide completed package outputs and require verdict:
+APPROVE or REQUEST_CHANGES with findings table.
 
 If REQUEST_CHANGES:
 

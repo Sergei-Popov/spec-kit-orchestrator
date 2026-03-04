@@ -12,7 +12,7 @@ Spec Kit Orchestrator extends the standard spec-driven development workflow with
 | Medium feature, 10-30 tasks, single domain | Standard or orchestrated |
 | Large feature, 30+ tasks, multiple domains | Orchestrated |
 | Multiple developers working simultaneously | Orchestrated with parallel Code Agents |
-| High compliance requirements | Orchestrated with supervised mode |
+| High compliance requirements | Orchestrated with explicit checkpoints |
 
 ## Setup
 
@@ -29,7 +29,16 @@ This installs standard spec-kit templates plus orchestration templates and slash
 Run the orchestration init command in your AI assistant:
 
 ```text
-/speckit.orchestrate-init Set up semi-auto mode with 2 code agents
+/speckit.orchestrate-init Set up orchestration with 2 code agents
+```
+
+### Option C: Unsupported provider (generic mode)
+
+If your provider is not in the built-in `--ai` list (for example Z.AI), install
+commands with `generic` and a custom commands directory:
+
+```bash
+specify init my-project --ai generic --ai-commands-dir .zai/commands --orchestrate
 ```
 
 ## Workflow
@@ -46,25 +55,21 @@ The orchestrator manages the entire lifecycle — from specification to implemen
 
 You describe your project to `/speckit.orchestrate-init` and the orchestrator handles constitution, specification, planning, task breakdown, and implementation by delegating to specialized agents. There is no need to run the standard `/speckit.*` commands separately.
 
-## Autonomy Modes
+## Checkpoint Workflow
 
-### Supervised
+The orchestrator now uses one unified workflow:
 
-The orchestrator pauses after **every work package** and asks you to approve, retry, or abort. Best for: learning the system, high-risk features, regulated environments.
-
-### Semi-auto
-
-The orchestrator pauses after **each phase** (not each package). Within a phase, agents work without interruption. Best for: most projects, balanced control and speed.
-
-### Autonomous
-
-The orchestrator runs end-to-end without pausing. It only stops on test failures or CRITICAL review findings. Best for: well-tested codebases, experienced teams, prototyping.
+1. `/speckit.orchestrate-init` generates constitution, spec, plan, tasks, and coordination artifacts.
+2. It asks for artifact corrections and applies them.
+3. It runs team analysis to generate implementation checklists and checklist questions.
+4. It asks checklist questions with 3 answer options each (option 3 is the orchestrator recommendation).
+5. After answers are applied, it instructs you to run `/speckit.orchestrate-run`.
 
 ## Agent Roles
 
 ### Orchestrator (you + AI assistant)
 
-The AI assistant running the `/speckit.orchestrate.*` commands acts as the orchestrator. It reads the coordination plan, assigns work, tracks state, and manages review cycles. You provide oversight based on the autonomy mode.
+The AI assistant running the `/speckit.orchestrate.*` commands acts as the orchestrator. It reads the coordination plan, assigns work, tracks state, and manages review cycles with explicit user checkpoints.
 
 ### Architect Agent
 
@@ -86,7 +91,7 @@ Reviews completed work packages for constitution compliance, spec compliance, co
 
 | File | Location | Purpose |
 |------|----------|---------|
-| `orchestrator-config.yml` | `.specify/orchestrator/` | Team and mode configuration |
+| `orchestrator-config.yml` | `.specify/orchestrator/` | Team and provider capability configuration |
 | `orchestrator-state.yml` | `specs/NNN-feature/` | Live execution state |
 | `orchestrator.md` | `.specify/orchestrator/agents/` | Orchestrator role prompt |
 | `architect.md` | `.specify/orchestrator/agents/` | Architect role prompt |

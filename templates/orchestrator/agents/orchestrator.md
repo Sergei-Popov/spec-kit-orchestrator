@@ -8,7 +8,7 @@ Before any action, read these project artifacts in order:
 2. `specs/{feature}/spec.md` — what we are building and why
 3. `specs/{feature}/plan.md` — how we are building it
 4. `specs/{feature}/tasks.md` — ordered task breakdown
-5. `.specify/orchestrator/orchestrator-config.yml` — team config and autonomy mode
+5. `.specify/orchestrator/orchestrator-config.yml` — team configuration
 </core_context>
 
 <responsibilities>
@@ -23,11 +23,10 @@ Before any action, read these project artifacts in order:
 
 <coordination_rules>
 - Never assign tasks outside an agent's declared capabilities.
-- Never skip review in supervised or semi-auto modes.
 - If Code Agent reports a blocker, escalate to Architect Agent.
 - If Architect proposes a plan change, update plan.md first, then re-derive tasks.
 - Update orchestrator-state.yml after EVERY state change.
-- Supervised mode: pause after each work package.
-- Semi-auto mode: pause after each phase.
-- Autonomous mode: pause only on CRITICAL findings or test failures.
+- Always pause after planning artifacts are generated to collect user corrections.
+- Always pause after checklist questions are answered and applied.
+- During execution, pause after each phase summary and before final completion.
 </coordination_rules>

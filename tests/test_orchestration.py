@@ -54,34 +54,34 @@ def project_dir(temp_dir):
 class TestGenerateOrchestratorConfig:
     def test_config_file_created(self, project_dir):
         team = {"architect": 1, "code": 2, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         assert config_path.exists()
 
     def test_config_is_valid_yaml(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "semi-auto", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert isinstance(data, dict)
 
-    def test_config_mode_field(self, project_dir):
+    def test_config_does_not_include_mode_field(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "autonomous", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        assert data["mode"] == "autonomous"
+        assert "mode" not in data
 
     def test_config_code_agent_count(self, project_dir):
         team = {"architect": 1, "code": 3, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert data["agents"]["code"]["count"] == 3
 
     def test_config_has_quality_gates(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert data["quality_gates"]["min_test_coverage"] == 80
@@ -90,7 +90,7 @@ class TestGenerateOrchestratorConfig:
 
     def test_config_has_checkpoints(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert data["checkpoints"]["after_phase"] is True
@@ -99,14 +99,14 @@ class TestGenerateOrchestratorConfig:
 
     def test_config_feature_defaults_empty(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert data["feature"] == "" or data["feature"] is None
 
     def test_config_code_agent_parallel(self, project_dir):
         team = {"architect": 1, "code": 2, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         assert data["agents"]["code"]["parallel"] is True
@@ -277,7 +277,7 @@ class TestEmbeddedContentWrittenWithoutTemplateFiles:
 
     def test_all_three_artifacts_produced(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         _install_orchestrator_templates(project_dir)
         _install_orchestrate_commands(project_dir, "copilot")
 
@@ -298,7 +298,7 @@ class TestOrchestrateInitDynamicAgentInstructions:
 class TestOpenCodeOrchestrationRegression:
     def test_generated_config_exposes_provider_capabilities(self, project_dir):
         team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _generate_orchestrator_config(project_dir, "supervised", team)
+        _generate_orchestrator_config(project_dir, team)
         config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
 

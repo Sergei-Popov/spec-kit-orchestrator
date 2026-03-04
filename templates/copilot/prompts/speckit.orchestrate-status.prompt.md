@@ -8,7 +8,7 @@ Read `specs/{active_feature}/orchestrator-state.yml` and
 `specs/{active_feature}/agent-coordination.yml`.
 
 Display:
-- Feature name and autonomy mode
+- Feature name
 - Current phase (N/total)
 - Per work-package: status icon, agent, task progress
 - Overall progress percentage

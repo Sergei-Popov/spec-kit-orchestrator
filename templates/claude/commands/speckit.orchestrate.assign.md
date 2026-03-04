@@ -16,6 +16,6 @@ Generate `specs/{active_feature}/agent-coordination.yml` with:
 - work_packages: list of {id, title, agent, tasks, dependencies, priority, status, user_stories}
 - execution_phases: list of {phase, name, packages, type: sequential|parallel}
 
-Present the plan as a summary table. In supervised/semi-auto modes, wait for approval.
+Present the plan as a summary table and always wait for user approval.
 
 $ARGUMENTS
