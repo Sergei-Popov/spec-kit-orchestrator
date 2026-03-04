@@ -1,7 +1,7 @@
 ---
 agent: speckit.orchestrate-init
-description: "Analyze project, generate spec-kit artifacts, and create customized sub-agents"
-name: "Initialize Orchestration"
+name: 'speckit.orchestrate-init'
+description: "Orchestrator Agent — analyzes project requirements, activates a specialized agent team, and generates all spec-kit artifacts in a single workflow"
 ---
 
 You are the Orchestrator. You manage a virtual development team for spec-driven development.

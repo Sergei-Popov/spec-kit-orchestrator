@@ -1,7 +1,7 @@
 ---
 agent: speckit.orchestrate-status
-description: "Display current progress of the orchestrated development workflow"
-name: "Orchestration Status"
+name: 'speckit.orchestrate-status'
+description: "Orchestration Status — displays current progress of the orchestrated development workflow"
 ---
 
 Read `specs/{active_feature}/orchestrator-state.yml` and
