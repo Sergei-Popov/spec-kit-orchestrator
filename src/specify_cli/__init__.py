@@ -2390,11 +2390,11 @@ def extension_disable(
 
 ORCHESTRATE_COMMANDS = {
     "orchestrate.init": "Initialize orchestration for a feature or user story",
+    "orchestrate.assign": "Analyze tasks and create agent work packages",
+    "orchestrate.run": "Execute orchestration phases and coordinate agents",
     "orchestrate.status": "Show current orchestration progress and agent status",
-    "orchestrate.next": "Advance to the next orchestration phase",
-    "orchestrate.pause": "Pause orchestration and save state",
-    "orchestrate.resume": "Resume a paused orchestration session",
     "orchestrate.review": "Trigger cross-agent review checkpoint",
+    "orchestrate.sync": "Reconcile parallel agent outputs and resolve conflicts",
 }
 
 
