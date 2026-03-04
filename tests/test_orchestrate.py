@@ -171,6 +171,15 @@ class TestSlashCommandsCopilot:
             content = (agents_dir / f"speckit.orchestrate-{name}.agent.md").read_text(encoding="utf-8")
             assert f"mode: speckit.orchestrate-{name}" in content
 
+    def test_copilot_orchestrate_agent_handoff_counts(self, project_dir):
+        _install_orchestrate_commands(project_dir, "copilot")
+        agents_dir = project_dir / ".github" / "agents"
+        expected_counts = {"init": 2, "run": 7, "status": 2}
+        for name, expected_count in expected_counts.items():
+            content = (agents_dir / f"speckit.orchestrate-{name}.agent.md").read_text(encoding="utf-8")
+            assert "handoffs:" in content
+            assert content.count("label:") == expected_count
+
 
 # ===== Test 7: slash commands installed for claude =====
 
@@ -387,3 +396,17 @@ class TestOrchestrateWithNoGit:
         commands_dir = project_dir / ".claude" / "commands"
         assert len(list(commands_dir.glob("speckit.orchestrate.*.agent.md"))) == 0
         assert len(list(commands_dir.glob("speckit.orchestrate-*.prompt.md"))) == 3
+
+
+class TestWorkflowHandoffTemplates:
+    def test_tasks_template_has_orchestrate_handoff(self):
+        tasks_template = REPO_ROOT / "templates" / "commands" / "tasks.md"
+        content = tasks_template.read_text(encoding="utf-8")
+        assert 'label: "🤖 Orchestrate (Multi-Agent)"' in content
+        assert "agent: speckit.orchestrate-init" in content
+
+    def test_implement_template_has_switch_to_orchestration_handoff(self):
+        implement_template = REPO_ROOT / "templates" / "commands" / "implement.md"
+        content = implement_template.read_text(encoding="utf-8")
+        assert 'label: "🤖 Switch to Orchestration"' in content
+        assert "agent: speckit.orchestrate-init" in content
