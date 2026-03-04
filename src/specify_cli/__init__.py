@@ -1390,8 +1390,15 @@ def init(
     # Validate --ai-commands-dir usage
     if selected_ai == "generic":
         if not ai_commands_dir:
+            ai_commands_dir = typer.prompt("Enter directory for generic agent commands (e.g. .myagent/commands)")
+            ai_commands_dir = ai_commands_dir.strip()
+        if not ai_commands_dir:
             console.print("[red]Error:[/red] --ai-commands-dir is required when using --ai generic")
             console.print("[dim]Example: specify init my-project --ai generic --ai-commands-dir .myagent/commands/[/dim]")
+            raise typer.Exit(1)
+        if ai_commands_dir.startswith("--"):
+            console.print(f"[red]Error:[/red] Invalid value for --ai-commands-dir: '{ai_commands_dir}'")
+            console.print("[yellow]Example:[/yellow] specify init --ai generic --ai-commands-dir .myagent/commands/")
             raise typer.Exit(1)
     elif ai_commands_dir:
         console.print(f"[red]Error:[/red] --ai-commands-dir can only be used with --ai generic (not '{selected_ai}')")
@@ -1513,7 +1520,7 @@ def init(
                                 console.print("[yellow]Warning: could not remove extracted commands directory[/yellow]")
 
             if orchestrate:
-                _setup_orchestration(project_path, selected_ai, selected_script)
+                _setup_orchestration(project_path, selected_ai, selected_script, ai_commands_dir=ai_commands_dir)
 
             if not no_git:
                 tracker.start("git")
@@ -3781,7 +3788,7 @@ ORCHESTRATE_AGENT_PROMPT_FILE_CONTENT = {
 }
 
 
-def _setup_orchestration(project_path: Path, agent: str, script_type: str) -> None:
+def _setup_orchestration(project_path: Path, agent: str, script_type: str, ai_commands_dir: str | None = None) -> None:
     """Set up multi-agent orchestration scaffolding inside the project."""
     console.print(Panel(
         "[bold cyan]Setting up multi-agent orchestration...[/bold cyan]",
@@ -3797,7 +3804,7 @@ def _setup_orchestration(project_path: Path, agent: str, script_type: str) -> No
 
     _generate_orchestrator_config(project_path, mode, team)
     _install_orchestrator_templates(project_path)
-    _install_orchestrate_commands(project_path, agent)
+    _install_orchestrate_commands(project_path, agent, ai_commands_dir=ai_commands_dir)
 
     console.print("[bold green]✓[/bold green] Orchestration scaffolding created")
 
@@ -3888,7 +3895,7 @@ def _install_orchestrator_templates(project_path: Path) -> None:
         (agents_dir / filename).write_text(content, encoding="utf-8")
 
 
-def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
+def _install_orchestrate_commands(project_path: Path, agent_key: str, ai_commands_dir: str | None = None) -> None:
     """Install orchestration command files for the selected agent.
 
     For Copilot, install matching .agent.md role files in .github/agents/ and
@@ -3907,6 +3914,13 @@ def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
             (agents_dir / filename).write_text(content, encoding="utf-8")
         for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():
             (prompts_dir / filename).write_text(content, encoding="utf-8")
+        return
+
+    if agent_key == "generic" and ai_commands_dir:
+        commands_dir = project_path / ai_commands_dir
+        commands_dir.mkdir(parents=True, exist_ok=True)
+        for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():
+            (commands_dir / filename).write_text(content, encoding="utf-8")
         return
 
     agent_config = AGENT_CONFIG.get(agent_key, {})

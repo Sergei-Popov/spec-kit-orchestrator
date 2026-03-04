@@ -700,6 +700,29 @@ class TestCliValidation:
         assert "q" not in AGENT_CONFIG
         assert "kiro-cli" in AGENT_CONFIG
 
+    def test_interactive_generic_prompts_for_ai_commands_dir(self, tmp_path):
+        """Interactive generic selection should prompt for --ai-commands-dir equivalent input."""
+        from typer.testing import CliRunner
+
+        runner = CliRunner()
+        target = tmp_path / "generic-interactive-proj"
+
+        with patch("specify_cli.select_with_arrows", return_value="generic"), \
+             patch("specify_cli.download_and_extract_template") as mock_download, \
+             patch("specify_cli.ensure_executable_scripts"), \
+             patch("specify_cli.ensure_constitution_from_template"), \
+             patch("specify_cli.is_git_repo", return_value=False), \
+             patch("specify_cli.shutil.which", return_value="/usr/bin/git"):
+            result = runner.invoke(
+                app,
+                ["init", str(target), "--ignore-agent-tools", "--script", "sh", "--no-git"],
+                input=".myagent/commands/\n",
+            )
+
+        assert result.exit_code == 0
+        assert mock_download.called
+        assert mock_download.call_args.args[1] == "generic"
+
 
 class TestParameterOrderingIssue:
     """Test fix for GitHub issue #1641: parameter ordering issues."""

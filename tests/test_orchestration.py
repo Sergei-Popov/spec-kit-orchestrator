@@ -202,6 +202,12 @@ class TestInstallOrchestrateCommands:
         assert len(agent_files) == 0
         assert len(prompt_files) == 3
 
+    def test_generic_uses_custom_ai_commands_dir(self, project_dir):
+        _install_orchestrate_commands(project_dir, "generic", ai_commands_dir=".myagent/commands")
+        custom_dir = project_dir / ".myagent" / "commands"
+        assert len(list(custom_dir.glob("speckit.orchestrate-*.prompt.md"))) == 3
+        assert not (project_dir / "commands").exists()
+
 
 # ===== ORCHESTRATE_COMMANDS constant =====
 
