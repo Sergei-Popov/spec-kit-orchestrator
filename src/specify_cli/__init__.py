@@ -2959,39 +2959,181 @@ COPILOT_ORCHESTRATE_AGENT_CONTENT = {
 ORCH_PROMPT_INIT = """\
 ---
 name: "Initialize Orchestration"
-description: "Analyze project requirements and set up the agent team for coordinated development"
+description: "Analyze project, generate spec-kit artifacts, and create customized sub-agents"
 ---
 
-Activate the Orchestrator Agent from `.github/agents/speckit.orchestrate.orchestrator.agent.md`.
+You are the Orchestrator. You manage a virtual development team for spec-driven development.
 
-Read `.specify/orchestrator/orchestrator-config.yml` for current team configuration.
-Read `.specify/memory/constitution.md` if it exists.
+When the user provides a project description, execute ALL of the following steps.
+Do not skip any step. Do not ask for permission between steps — execute them all sequentially.
 
-The user will describe what they want to build. Follow the Orchestrator's Phase 0 — Project Setup:
+## Step 1 — Analyze the Project
 
-1. Analyze the description — determine scope, complexity, domains.
-2. Activate agents per the activation rules in the Orchestrator Agent definition.
-3. Delegate to Architect Agent (`.github/agents/speckit.orchestrate.architect.agent.md`):
-   - Create constitution.md using `.specify/templates/constitution-template.md`
-   - Create spec.md using `.specify/templates/spec-template.md`
-   - Ask user max 3 clarifying questions if requirements are ambiguous
-   - Create plan.md using `.specify/templates/plan-template.md`
-4. Generate tasks.md using `.specify/templates/tasks-template.md`
-5. Break tasks into work packages → write `specs/{feature}/agent-coordination.yml`
-6. Present the full plan:
+Read the user's description and determine:
+- Project domains (backend, frontend, database, infrastructure, AI/ML, etc.)
+- Complexity level (small: <15 tasks, medium: 15-40 tasks, large: 40+ tasks)
+- How many Code Agents are needed (1 per major domain, max 3)
+- Whether a Test Agent is needed (yes if: API, database, or user mentions testing)
 
-   ## Project Analysis
-   Scope and complexity assessment.
+## Step 2 — Generate Constitution
 
-   ## Agent Team
-   | Role | Count | Domain | Rationale |
-   |------|-------|--------|-----------|
+Read `.specify/templates/constitution-template.md` for the template format.
+Create `.specify/memory/constitution.md` with principles derived from the
+user's description. Include principles about: tech stack constraints,
+deployment model, data handling, testing approach, code style.
 
-   ## Work Packages
-   | WP | Agent | Tasks | Dependencies | Phase |
-   |----|-------|-------|-------------|-------|
+## Step 3 — Generate Specification
 
-7. Ask user to approve, then tell them to run `/speckit.orchestrate.run`.
+Read `.specify/templates/spec-template.md` for the template format.
+Run the shell script to create the feature branch and directory:
+```bash
+bash .specify/scripts/bash/create-new-feature.sh "feature-name"
+```
+Create `specs/001-feature-name/spec.md` with: overview, user stories,
+functional requirements, non-functional requirements, acceptance criteria.
+Derive all of these from the user's description.
+
+## Step 4 — Generate Plan
+
+Read `.specify/templates/plan-template.md` for the template format.
+Create `specs/001-feature-name/plan.md` with: tech stack, architecture,
+data model, API endpoints, file structure, phased implementation approach.
+
+## Step 5 — Generate Tasks
+
+Read `.specify/templates/tasks-template.md` for the template format.
+Create `specs/001-feature-name/tasks.md` with dependency-ordered tasks.
+Use markers: `(create: path)`, `(update: path)`, `(run: command)`, `[P]`, `[US*]`.
+
+## Step 6 — Create Agent Coordination Plan
+
+Create `specs/001-feature-name/agent-coordination.yml` with work packages
+grouped by domain, assigned to agent roles, ordered by dependency.
+
+## Step 7 — CREATE CUSTOMIZED SUB-AGENT FILES
+
+This is the critical step. You must physically create agent files in
+`.github/agents/` that are customized for THIS project.
+
+Read the base templates from `.specify/orchestrator/agents/*.md` and
+adapt them with project-specific context (tech stack, file paths,
+conventions from the plan).
+
+Create these files:
+
+### `.github/agents/orchestrate.orchestrator.agent.md`
+Take the base from `.specify/orchestrator/agents/orchestrator.md`.
+Add to it:
+- The specific agent team composition you decided in Step 1
+- The specific work packages from Step 6
+- The project's tech stack from the plan
+- References to all other orchestrate.*.agent.md files by filename
+
+Include a HANDOFF section that lists each sub-agent:
+````
+## Agent Handoffs
+
+When you need to delegate work, instruct the user to invoke the
+appropriate agent by referencing its file:
+
+- Architecture tasks → Tell user: "Now switch to the Architect Agent.
+  Open `.github/agents/orchestrate.architect.agent.md` and give it
+  work package WP-NNN"
+- Backend implementation → Tell user: "Switch to Code Agent Backend.
+  Open `.github/agents/orchestrate.code-backend.agent.md` and give it
+  work package WP-NNN"
+- Frontend implementation → Tell user: "Switch to Code Agent Frontend.
+  Open `.github/agents/orchestrate.code-frontend.agent.md`"
+- Testing → Tell user: "Switch to Test Agent.
+  Open `.github/agents/orchestrate.test.agent.md`"
+- Code review → Tell user: "Switch to Review Agent.
+  Open `.github/agents/orchestrate.review.agent.md`"
+````
+
+### `.github/agents/orchestrate.architect.agent.md`
+Take the base from `.specify/orchestrator/agents/architect.md`.
+Customize with:
+- The specific tech stack from plan.md
+- The specific data model entities
+- The specific API contracts
+- Reference to constitution.md location
+
+### `.github/agents/orchestrate.code-backend.agent.md`
+(Only create if the project has a backend domain)
+Take the base from `.specify/orchestrator/agents/code.md`.
+Customize with:
+- Backend tech stack (e.g., "You write Node.js with Express and Prisma")
+- Backend file paths (e.g., "Your files are in server/ or backend/")
+- The specific work packages assigned to code-backend
+- List of tasks with (create:) and (update:) markers
+- Testing command to run after each task
+
+### `.github/agents/orchestrate.code-frontend.agent.md`
+(Only create if the project has a frontend domain)
+Take the base from `.specify/orchestrator/agents/code.md`.
+Customize with:
+- Frontend tech stack (e.g., "You write React with TypeScript and Tailwind")
+- Frontend file paths (e.g., "Your files are in client/ or frontend/")
+- The specific work packages assigned to code-frontend
+- Testing command
+
+### `.github/agents/orchestrate.code-infra.agent.md`
+(Only create if the project has infrastructure/DevOps tasks)
+Take the base from `.specify/orchestrator/agents/code.md`.
+Customize with:
+- Infrastructure tooling (e.g., "You write Dockerfiles, docker-compose.yml, nginx configs")
+- The specific work packages assigned to code-infra
+
+### `.github/agents/orchestrate.test.agent.md`
+Take the base from `.specify/orchestrator/agents/test.md`.
+Customize with:
+- Testing framework from plan.md (e.g., "Use Vitest for unit, Supertest for API")
+- Test file location convention
+- Coverage threshold from orchestrator-config.yml
+
+### `.github/agents/orchestrate.review.agent.md`
+Take the base from `.specify/orchestrator/agents/review.md`.
+Customize with:
+- Constitution principles summary (so the reviewer knows what to check)
+- Critical security concerns specific to this project
+- Specific acceptance criteria from spec.md
+
+## Step 8 — Update orchestrator-config.yml
+
+Update `.specify/orchestrator/orchestrator-config.yml` with:
+- The feature name
+- The actual agent team (roles, counts, assigned domains)
+- References to the created agent file paths
+
+## Step 9 — Present Summary
+
+Show the user:
+## Orchestration Initialized
+
+### Artifacts Created
+- constitution.md — N principles
+- spec.md — N user stories, N requirements
+- plan.md — tech stack, architecture, N API endpoints
+- tasks.md — N tasks in N phases
+- agent-coordination.yml — N work packages
+
+### Agent Team Created
+| Agent File | Role | Domain |
+|-----------|------|--------|
+| orchestrate.orchestrator.agent.md | Orchestrator | Full project |
+| orchestrate.architect.agent.md | Architect | Architecture |
+| orchestrate.code-backend.agent.md | Code | Backend |
+| orchestrate.code-frontend.agent.md | Code | Frontend |
+| orchestrate.code-infra.agent.md | Code | Infrastructure |
+| orchestrate.test.agent.md | Test | All domains |
+| orchestrate.review.agent.md | Review | All domains |
+
+### How to Run
+
+1. Review the generated artifacts in `specs/001-feature-name/`
+2. Start execution: `/speckit.orchestrate.run`
+3. The orchestrator will guide you through each phase and tell you
+   when to switch to a specific sub-agent.
 
 $ARGUMENTS
 """
@@ -2999,42 +3141,133 @@ $ARGUMENTS
 ORCH_PROMPT_RUN = """\
 ---
 name: "Run Orchestration"
-description: "Execute the coordination plan — agents implement, test, and review the feature"
+description: "Execute the coordination plan by delegating to sub-agents phase by phase"
 ---
 
-Activate the Orchestrator Agent from `.github/agents/speckit.orchestrate.orchestrator.agent.md`.
+You are the Orchestrator Agent. Read your full role definition from:
+`.github/agents/orchestrate.orchestrator.agent.md`
 
-Read:
-- `.specify/orchestrator/orchestrator-config.yml`
+Read the execution plan:
 - `specs/{active_feature}/agent-coordination.yml`
-- `specs/{active_feature}/tasks.md`
-- All agent definitions in `.github/agents/speckit.orchestrate.*.agent.md`
+- `.specify/orchestrator/orchestrator-config.yml`
 
-If `specs/{active_feature}/orchestrator-state.yml` exists, resume from last completed package.
+If `specs/{active_feature}/orchestrator-state.yml` exists, find the last
+completed work package and resume from the next one.
 
-For each phase in agent-coordination.yml:
+Execute the plan phase by phase. For EACH work package, you must:
 
-1. Print phase header: `=== Phase N: {name} ===`
-2. For each work package in this phase:
-   a. Print: `>>> WP-NNN: {title} [Agent: {role}]`
-   b. Load the agent definition from `.github/agents/speckit.orchestrate.{role}.agent.md`
-   c. BECOME that agent — follow its responsibilities, constraints, output format
-   d. Execute all tasks in the package
-   e. Print completion summary per agent's output format
-   f. Update `specs/{active_feature}/orchestrator-state.yml`
-   g. Return to Orchestrator role
-3. After phase completion:
-   - If implementation happened: run test suite
-   - Print phase summary table
-   - Mode check:
-     - supervised → ask: approve / retry WP-NNN / abort
-     - semi-auto → ask: continue to next phase / abort
-     - autonomous → continue (pause only on test failure or CRITICAL finding)
+### 1. Announce the Work Package
+````
+═══════════════════════════════════════════════════
+PHASE {N}/{total}: {phase_name}
+WORK PACKAGE: {WP-ID} — {title}
+AGENT: {agent_role} → {agent_file_name}
+TASKS: {task_list}
+═══════════════════════════════════════════════════
+````
 
-After all phases:
-- Load Review Agent and review all completed packages
-- APPROVE → print final summary, mark feature complete
-- REQUEST_CHANGES → route findings back to Code Agent, re-run affected packages
+### 2. Delegate to the Sub-Agent
+You CANNOT do the work yourself. You MUST delegate. Give the user these
+exact instructions:
+
+📋 ACTION REQUIRED:
+
+Open a new Copilot Chat session and reference the agent file:
+
+  @workspace Use the agent defined in `.github/agents/{agent_file_name}`
+
+Then give it this work package:
+
+  Execute work package {WP-ID}: {title}
+  Tasks: {numbered task list with file markers}
+
+  Read these files for context:
+  - `specs/{feature}/plan.md` (tech stack and architecture)
+  - `specs/{feature}/spec.md` (requirements)
+  - `.specify/memory/constitution.md` (principles)
+
+  After completing all tasks, report back with:
+  [WP-{ID}] COMPLETE — list of files created/modified
+
+When done, come back to THIS chat and tell me the result.
+
+### 3. Wait for the User to Report Back
+After the user confirms the sub-agent completed the work package:
+
+- Record the result in `specs/{active_feature}/orchestrator-state.yml`
+- Update the work package status to completed
+- Check if the next work package's dependencies are all met
+- If this was the last package in a phase, run the phase checkpoint:
+
+#### Phase Checkpoint
+──────────────────────────────────────────
+PHASE {N} COMPLETE: {phase_name}
+
+| WP | Agent | Status | Files |
+|----|-------|--------|-------|
+| WP-001 | architect | ✅ | 3 files |
+| WP-002 | code-backend | ✅ | 8 files |
+
+Next phase: {N+1} — {next_phase_name}
+──────────────────────────────────────────
+
+#### Mode-Based Pause
+- Supervised: Ask "Approve phase and continue? (yes / retry WP-NNN / abort)"
+- Semi-auto: Ask "Continue to next phase? (yes / abort)"
+- Autonomous: Continue immediately unless test failures exist
+
+### 4. Handle Parallel Packages
+If the current phase has packages marked parallel, tell the user:
+
+📋 PARALLEL EXECUTION — Open multiple Copilot Chat sessions:
+
+Session 1: @workspace Use `.github/agents/{agent_1}`
+  → Execute WP-{X}: {title}
+
+Session 2: @workspace Use `.github/agents/{agent_2}`
+  → Execute WP-{Y}: {title}
+
+Run both simultaneously. Report back when BOTH are complete.
+
+### 5. After All Implementation Phases — Trigger Review
+📋 REVIEW PHASE:
+
+Open a new Copilot Chat session:
+
+  @workspace Use the agent defined in `.github/agents/orchestrate.review.agent.md`
+
+  Review all completed work packages:
+  {list of completed WPs with their file lists}
+
+  Check against:
+  - `specs/{feature}/spec.md` (acceptance criteria)
+  - `.specify/memory/constitution.md` (principles)
+
+  Issue verdict: APPROVE or REQUEST_CHANGES with findings table.
+
+If REQUEST_CHANGES:
+
+- Parse the findings
+- Route each finding to the responsible code agent
+- Tell user to re-run that agent with the fix instructions
+- After fixes, re-trigger review (max 3 rounds)
+
+If APPROVE:
+
+- Mark feature as complete in orchestrator-state.yml
+- Print final summary
+
+### 6. Final Summary
+═══════════════════════════════════════════════════
+✅ FEATURE COMPLETE: {feature_name}
+
+Phases completed: {N}/{N}
+Work packages: {N} complete, 0 remaining
+Review: APPROVED (round {N}/3)
+Total files created/modified: {count}
+
+All artifacts in: `specs/{feature}/`
+═══════════════════════════════════════════════════
 
 $ARGUMENTS
 """
@@ -3193,26 +3426,17 @@ def _install_orchestrator_templates(project_path: Path) -> None:
 def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
     """Install the three /speckit.orchestrate.* slash commands for the selected agent.
 
-    For Copilot, this also installs 5 agent role files (.agent.md) in
-    .github/agents/ and places the 3 action commands as .prompt.md files
-    in .github/prompts/ — matching the Copilot convention where agents/
-    holds role definitions and prompts/ holds action instructions.
+    For Copilot, prompts are written to .github/prompts/.
+    For all other agents, prompts are written to the agent command directory.
+    Runtime orchestration sub-agents are created dynamically by
+    /speckit.orchestrate.init in .github/agents/ after project analysis.
     """
     if agent_key == "copilot":
-        # Copilot: agent ROLES go to .github/agents/
-        agents_dir = project_path / ".github" / "agents"
-        agents_dir.mkdir(parents=True, exist_ok=True)
-        for filename, content in COPILOT_ORCHESTRATE_AGENT_CONTENT.items():
-            (agents_dir / filename).write_text(content, encoding="utf-8")
-
-        # Copilot: action PROMPTS go to .github/prompts/
+        # Copilot: action prompts go to .github/prompts/
         prompts_dir = project_path / ".github" / "prompts"
         prompts_dir.mkdir(parents=True, exist_ok=True)
         for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():
-            prompt_content = (
-                f"---\nagent: speckit.orchestrate.orchestrator\n---\n\n{content}"
-            )
-            (prompts_dir / filename).write_text(prompt_content, encoding="utf-8")
+            (prompts_dir / filename).write_text(content, encoding="utf-8")
         return
 
     agent_config = AGENT_CONFIG.get(agent_key, {})
@@ -3224,21 +3448,16 @@ def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
     else:
         base_dir = project_path
 
-    # Determine directories based on agent type
-    agents_dir = base_dir / commands_subdir
-    agents_dir.mkdir(parents=True, exist_ok=True)
+    commands_dir = base_dir / commands_subdir
+    commands_dir.mkdir(parents=True, exist_ok=True)
 
     if commands_subdir == "agents":
         # Copilot pattern: prompts go to a separate "prompts" directory
         prompts_dir = base_dir / "prompts"
     else:
         # All other agents: prompts go to the same commands directory
-        prompts_dir = agents_dir
+        prompts_dir = commands_dir
     prompts_dir.mkdir(parents=True, exist_ok=True)
-
-    # Write agent role files
-    for filename, content in ORCHESTRATE_AGENT_FILE_CONTENT.items():
-        (agents_dir / filename).write_text(content, encoding="utf-8")
 
     # Write prompt/action files
     for filename, content in ORCHESTRATE_PROMPT_FILE_CONTENT.items():

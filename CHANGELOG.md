@@ -7,6 +7,14 @@ Recent changes to the Specify CLI and templates are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.20] - 2026-03-04
+
+### Fixed
+
+- Updated `speckit.orchestrate.init` and `speckit.orchestrate.run` prompts to require dynamic runtime creation of project-specific sub-agent files in `.github/agents/`
+- Changed orchestration command installation to install only prompt files (`init`, `run`, `status`) and not static `speckit.orchestrate.*.agent.md` files
+- Kept base role templates in `.specify/orchestrator/agents/` as source material for runtime customization
+
 ## [0.1.19] - 2026-03-04
 
 ### Fixed
