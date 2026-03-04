@@ -20,6 +20,8 @@ from specify_cli import (
     _install_orchestrator_templates,
     _install_orchestrate_commands,
     ORCHESTRATE_COMMANDS,
+    ORCHESTRATE_TEMPLATE_FILES,
+    ORCHESTRATOR_AGENT_FILES,
     AGENT_CONFIG,
     app,
 )
@@ -114,67 +116,58 @@ class TestGenerateOrchestratorConfig:
 
 class TestInstallOrchestratorTemplates:
     def test_creates_agent_prompt_files(self, project_dir):
-        team = {"architect": 1, "code": 2, "test": 1, "review": 1}
-        _install_orchestrator_templates(project_dir, team)
+        _install_orchestrator_templates(project_dir)
         agents_dir = project_dir / ".specify" / "orchestrator" / "agents"
-        assert (agents_dir / "architect-agent.md").exists()
-        assert (agents_dir / "code-agent.md").exists()
-        assert (agents_dir / "test-agent.md").exists()
-        assert (agents_dir / "review-agent.md").exists()
+        for filename in ORCHESTRATOR_AGENT_FILES:
+            assert (agents_dir / filename).exists(), f"{filename} not found"
 
     def test_prompt_files_contain_role(self, project_dir):
-        team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _install_orchestrator_templates(project_dir, team)
+        _install_orchestrator_templates(project_dir)
         agents_dir = project_dir / ".specify" / "orchestrator" / "agents"
-        content = (agents_dir / "architect-agent.md").read_text(encoding="utf-8")
-        assert "architect" in content
+        content = (agents_dir / "architect.md").read_text(encoding="utf-8")
+        assert "Architect" in content
 
-    def test_prompt_has_yaml_frontmatter(self, project_dir):
-        team = {"architect": 1, "code": 1, "test": 1, "review": 1}
-        _install_orchestrator_templates(project_dir, team)
+    def test_copies_five_agent_files(self, project_dir):
+        _install_orchestrator_templates(project_dir)
         agents_dir = project_dir / ".specify" / "orchestrator" / "agents"
-        content = (agents_dir / "code-agent.md").read_text(encoding="utf-8")
-        assert content.startswith("---\n")
-        parts = content.split("---", 2)
-        assert len(parts) >= 3
-        fm = yaml.safe_load(parts[1])
-        assert fm["role"] == "code"
+        md_files = list(agents_dir.glob("*.md"))
+        assert len(md_files) == 5
 
 
 # ===== Slash commands =====
 
 class TestInstallOrchestrateCommands:
     def test_creates_six_command_files_for_claude(self, project_dir):
-        _install_orchestrate_commands(project_dir, "claude", "sh")
+        _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
-        md_files = list(commands_dir.glob("orchestrate.*.md"))
+        md_files = list(commands_dir.glob("speckit.orchestrate.*.md"))
         assert len(md_files) == 6
 
-    def test_command_files_have_frontmatter(self, project_dir):
-        _install_orchestrate_commands(project_dir, "claude", "sh")
+    def test_command_files_have_content(self, project_dir):
+        _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
-        for cmd_file in commands_dir.glob("orchestrate.*.md"):
+        for cmd_file in commands_dir.glob("speckit.orchestrate.*.md"):
             content = cmd_file.read_text(encoding="utf-8")
-            assert content.startswith("---\n")
-            assert "description:" in content
+            assert len(content) > 0
+            assert "$ARGUMENTS" in content
 
-    def test_command_names_match_constant(self, project_dir):
-        _install_orchestrate_commands(project_dir, "claude", "sh")
+    def test_command_names_match_template_list(self, project_dir):
+        _install_orchestrate_commands(project_dir, "claude")
         commands_dir = project_dir / ".claude" / "commands"
-        expected = {f"{name}.md" for name in ORCHESTRATE_COMMANDS}
-        actual = {f.name for f in commands_dir.glob("orchestrate.*.md")}
+        expected = set(ORCHESTRATE_TEMPLATE_FILES)
+        actual = {f.name for f in commands_dir.glob("speckit.orchestrate.*.md")}
         assert actual == expected
 
     def test_copilot_uses_agents_subdir(self, project_dir):
-        _install_orchestrate_commands(project_dir, "copilot", "sh")
+        _install_orchestrate_commands(project_dir, "copilot")
         commands_dir = project_dir / ".github" / "agents"
-        md_files = list(commands_dir.glob("orchestrate.*.md"))
+        md_files = list(commands_dir.glob("speckit.orchestrate.*.md"))
         assert len(md_files) == 6
 
     def test_gemini_uses_commands_subdir(self, project_dir):
-        _install_orchestrate_commands(project_dir, "gemini", "sh")
+        _install_orchestrate_commands(project_dir, "gemini")
         commands_dir = project_dir / ".gemini" / "commands"
-        md_files = list(commands_dir.glob("orchestrate.*.md"))
+        md_files = list(commands_dir.glob("speckit.orchestrate.*.md"))
         assert len(md_files) == 6
 
 
