@@ -3911,15 +3911,36 @@ ORCHESTRATE_PROMPT_AGENT_OVERRIDES = {
 
 
 def _apply_orchestrate_prompt_agent_override(content: str, target_agent: str) -> str:
-    """Override prompt frontmatter `agent:` for providers with fixed agent names."""
+    """Override prompt frontmatter `agent:` for providers with fixed agent names.
+
+    Args:
+        content: Original prompt content.
+        target_agent: Provider-valid agent name to inject into frontmatter.
+
+    Returns:
+        Prompt content with updated frontmatter `agent:` when present.
+    """
     lines = content.splitlines()
-    for idx, line in enumerate(lines):
-        if line.startswith("agent: "):
+    if not lines or lines[0].strip() != "---":
+        return content
+
+    end_frontmatter = None
+    for idx in range(1, len(lines)):
+        if lines[idx].strip() == "---":
+            end_frontmatter = idx
+            break
+
+    if end_frontmatter is None:
+        return content
+
+    for idx in range(1, end_frontmatter):
+        if lines[idx].startswith("agent: "):
             lines[idx] = f"agent: {target_agent}"
             break
+    trailing_newlines = len(content) - len(content.rstrip("\n"))
     updated = "\n".join(lines)
-    if content.endswith("\n"):
-        updated += "\n"
+    if trailing_newlines:
+        updated += "\n" * trailing_newlines
     return updated
 
 
