@@ -162,6 +162,18 @@ These commands don't just save time—they enforce consistency and completeness:
 
 The commands embody SDD principles by treating specifications as executable artifacts rather than static documents. They transform the specification process from a necessary evil into the driving force of development.
 
+### Multi-Agent Orchestration (Alternative to Step 6)
+
+For larger features, you can replace the single-agent `/speckit.implement` with multi-agent orchestration. After completing `/speckit.tasks`, run:
+
+1. `/speckit.orchestrate.init` — Configure your agent team and autonomy mode.
+2. `/speckit.orchestrate.assign` — The orchestrator analyzes your tasks and creates work packages, assigning each to the best-suited agent role (Architect, Code, Test, or Review).
+3. `/speckit.orchestrate.run` — Execute the coordination plan. The orchestrator manages dependencies, parallelism, and checkpoints.
+4. `/speckit.orchestrate.review` — The Review Agent examines completed work and issues APPROVE or REQUEST_CHANGES verdicts.
+5. `/speckit.orchestrate.sync` — Merge outputs from parallel Code Agents and resolve any file conflicts.
+
+This approach is especially effective for features with 20+ tasks spanning multiple domains (backend, frontend, data layer, tests). See `docs/orchestration.md` for the full guide.
+
 ### Template-Driven Quality: How Structure Constrains LLMs for Better Outcomes
 
 The true power of these commands lies not just in automation, but in how the templates guide LLM behavior toward higher-quality specifications. The templates act as sophisticated prompts that constrain the LLM's output in productive ways:
