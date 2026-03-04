@@ -7,6 +7,14 @@ Recent changes to the Specify CLI and templates are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.14] - 2026-03-04
+
+### Added
+
+- Multi-agent orchestration mode (`--orchestrate` flag on `specify init`)
+- 6 new `/speckit.orchestrate.*` slash commands
+- PyYAML dependency for orchestration config files
+
 ## [0.1.13] - 2026-03-03
 
 ### Changed

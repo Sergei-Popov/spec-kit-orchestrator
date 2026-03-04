@@ -1258,6 +1258,7 @@ def init(
     debug: bool = typer.Option(False, "--debug", help="Show verbose diagnostic output for network and extraction failures"),
     github_token: str = typer.Option(None, "--github-token", help="GitHub token to use for API requests (or set GH_TOKEN or GITHUB_TOKEN environment variable)"),
     ai_skills: bool = typer.Option(False, "--ai-skills", help="Install Prompt.MD templates as agent skills (requires --ai)"),
+    orchestrate: bool = typer.Option(False, "--orchestrate", help="Enable multi-agent orchestration mode"),
 ):
     """
     Initialize a new Specify project from the latest template.
@@ -1510,6 +1511,9 @@ def init(
                                 # Best-effort cleanup: skills are already installed,
                                 # so leaving stale commands is non-fatal.
                                 console.print("[yellow]Warning: could not remove extracted commands directory[/yellow]")
+
+            if orchestrate:
+                _setup_orchestration(project_path, selected_ai, selected_script)
 
             if not no_git:
                 tracker.start("git")
@@ -2380,6 +2384,145 @@ def extension_disable(
     console.print(f"[green]✓[/green] Extension '{extension}' disabled")
     console.print("\nCommands will no longer be available. Hooks will not execute.")
     console.print(f"To re-enable: specify extension enable {extension}")
+
+
+# ===== Orchestration Helpers =====
+
+ORCHESTRATE_COMMANDS = {
+    "orchestrate.init": "Initialize orchestration for a feature or user story",
+    "orchestrate.status": "Show current orchestration progress and agent status",
+    "orchestrate.next": "Advance to the next orchestration phase",
+    "orchestrate.pause": "Pause orchestration and save state",
+    "orchestrate.resume": "Resume a paused orchestration session",
+    "orchestrate.review": "Trigger cross-agent review checkpoint",
+}
+
+
+def _setup_orchestration(project_path: Path, agent: str, script_type: str) -> None:
+    """Set up multi-agent orchestration scaffolding inside the project."""
+    console.print(Panel(
+        "[bold cyan]Setting up multi-agent orchestration...[/bold cyan]",
+        border_style="cyan",
+        padding=(1, 2),
+    ))
+
+    agents_dir = project_path / ".specify" / "orchestrator" / "agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+
+    mode = _select_orchestration_mode()
+    team = _select_agent_team()
+
+    _generate_orchestrator_config(project_path, mode, team)
+    _install_orchestrator_templates(project_path, team)
+    _install_orchestrate_commands(project_path, agent, script_type)
+
+    console.print("[bold green]✓[/bold green] Orchestration scaffolding created")
+
+
+def _select_orchestration_mode() -> str:
+    """Let the user pick an autonomy level for the orchestrator."""
+    options = {
+        "supervised": "Human approves every step",
+        "semi-auto": "Human approves plan, agents execute",
+        "autonomous": "Full auto with review checkpoints",
+    }
+    return select_with_arrows(options, "Select orchestration mode", "supervised")
+
+
+def _select_agent_team() -> dict:
+    """Let the user choose how many code agents to run in parallel."""
+    options = {
+        "1": "Single code agent",
+        "2": "Two parallel code agents",
+        "3": "Three parallel code agents",
+    }
+    count = int(select_with_arrows(options, "Select code agent count", "1"))
+    return {"architect": 1, "code": count, "test": 1, "review": 1}
+
+
+def _generate_orchestrator_config(project_path: Path, mode: str, team: dict, feature: str = "") -> None:
+    """Write the orchestrator YAML config file."""
+    config = {
+        "feature": feature,
+        "mode": mode,
+        "agents": {
+            "architect": {
+                "role": "architect",
+                "count": team["architect"],
+                "capabilities": ["architecture_review", "data_model_validation", "refactoring_plans"],
+            },
+            "code": {
+                "role": "code",
+                "count": team["code"],
+                "capabilities": ["implementation", "bug_fixes", "file_operations"],
+                "parallel": True,
+            },
+            "test": {
+                "role": "test",
+                "count": team["test"],
+                "capabilities": ["test_generation", "test_execution", "coverage_analysis"],
+            },
+            "review": {
+                "role": "review",
+                "count": team["review"],
+                "capabilities": ["code_review", "spec_compliance", "quality_gates", "security_audit"],
+            },
+        },
+        "checkpoints": {
+            "after_phase": True,
+            "after_work_package": False,
+            "before_merge": True,
+        },
+        "quality_gates": {
+            "min_test_coverage": 80,
+            "require_review_approval": True,
+            "max_review_rounds": 3,
+        },
+    }
+
+    config_dir = project_path / ".specify" / "orchestrator"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config_path = config_dir / "orchestrator-config.yml"
+    with open(config_path, "w", encoding="utf-8") as f:
+        yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+
+
+def _install_orchestrator_templates(project_path: Path, team: dict) -> None:
+    """Write minimal agent prompt files for each role in the team."""
+    agents_dir = project_path / ".specify" / "orchestrator" / "agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+
+    for role in team:
+        prompt_path = agents_dir / f"{role}-agent.md"
+        prompt_path.write_text(
+            f"---\nrole: {role}\n---\n\n"
+            f"You are the **{role}** agent in a multi-agent orchestration team.\n"
+            f"Follow the orchestrator-config.yml for your capabilities and constraints.\n",
+            encoding="utf-8",
+        )
+
+
+def _install_orchestrate_commands(project_path: Path, agent: str, script_type: str) -> None:
+    """Install the six /speckit.orchestrate.* slash commands for the selected agent."""
+    agent_config = AGENT_CONFIG.get(agent, {})
+    agent_folder = agent_config.get("folder", "")
+    commands_subdir = agent_config.get("commands_subdir", "commands")
+
+    if agent_folder:
+        commands_dir = project_path / agent_folder.rstrip("/") / commands_subdir
+    else:
+        commands_dir = project_path / commands_subdir
+
+    commands_dir.mkdir(parents=True, exist_ok=True)
+
+    for cmd_name, description in ORCHESTRATE_COMMANDS.items():
+        cmd_path = commands_dir / f"{cmd_name}.md"
+        cmd_path.write_text(
+            f"---\ndescription: \"{description}\"\n---\n\n"
+            f"Run the `/speckit.{cmd_name}` orchestration command.\n\n"
+            f"$ARGUMENTS\n",
+            encoding="utf-8",
+        )
 
 
 def main():
