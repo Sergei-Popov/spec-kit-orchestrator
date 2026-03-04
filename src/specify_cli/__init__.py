@@ -2397,6 +2397,23 @@ ORCHESTRATE_COMMANDS = {
     "orchestrate.sync": "Reconcile parallel agent outputs and resolve conflicts",
 }
 
+ORCHESTRATE_TEMPLATE_FILES = [
+    "speckit.orchestrate.init.md",
+    "speckit.orchestrate.assign.md",
+    "speckit.orchestrate.run.md",
+    "speckit.orchestrate.status.md",
+    "speckit.orchestrate.review.md",
+    "speckit.orchestrate.sync.md",
+]
+
+ORCHESTRATOR_AGENT_FILES = [
+    "orchestrator.md",
+    "architect.md",
+    "code.md",
+    "test.md",
+    "review.md",
+]
+
 
 def _setup_orchestration(project_path: Path, agent: str, script_type: str) -> None:
     """Set up multi-agent orchestration scaffolding inside the project."""
@@ -2413,8 +2430,8 @@ def _setup_orchestration(project_path: Path, agent: str, script_type: str) -> No
     team = _select_agent_team()
 
     _generate_orchestrator_config(project_path, mode, team)
-    _install_orchestrator_templates(project_path, team)
-    _install_orchestrate_commands(project_path, agent, script_type)
+    _install_orchestrator_templates(project_path)
+    _install_orchestrate_commands(project_path, agent)
 
     console.print("[bold green]✓[/bold green] Orchestration scaffolding created")
 
@@ -2487,24 +2504,34 @@ def _generate_orchestrator_config(project_path: Path, mode: str, team: dict, fea
         yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
 
-def _install_orchestrator_templates(project_path: Path, team: dict) -> None:
-    """Write minimal agent prompt files for each role in the team."""
+def _resolve_templates_dir(project_path: Path, *subpath: str) -> Path:
+    """Locate a templates subdirectory — extracted project first, then source checkout."""
+    extracted = project_path / ".specify" / "templates" / Path(*subpath)
+    if extracted.exists():
+        return extracted
+    source_root = Path(__file__).parent.parent.parent  # up from src/specify_cli/
+    return source_root / "templates" / Path(*subpath)
+
+
+def _install_orchestrator_templates(project_path: Path) -> None:
+    """Copy agent prompt files from templates/orchestrator/agents/ into the project."""
     agents_dir = project_path / ".specify" / "orchestrator" / "agents"
     agents_dir.mkdir(parents=True, exist_ok=True)
 
-    for role in team:
-        prompt_path = agents_dir / f"{role}-agent.md"
-        prompt_path.write_text(
-            f"---\nrole: {role}\n---\n\n"
-            f"You are the **{role}** agent in a multi-agent orchestration team.\n"
-            f"Follow the orchestrator-config.yml for your capabilities and constraints.\n",
-            encoding="utf-8",
-        )
+    templates_dir = _resolve_templates_dir(project_path, "orchestrator", "agents")
+
+    for filename in ORCHESTRATOR_AGENT_FILES:
+        src = templates_dir / filename
+        dst = agents_dir / filename
+        if src.exists():
+            shutil.copy2(src, dst)
+        else:
+            console.print(f"[yellow]Warning: orchestrator template not found: {filename}[/yellow]")
 
 
-def _install_orchestrate_commands(project_path: Path, agent: str, script_type: str) -> None:
+def _install_orchestrate_commands(project_path: Path, agent_key: str) -> None:
     """Install the six /speckit.orchestrate.* slash commands for the selected agent."""
-    agent_config = AGENT_CONFIG.get(agent, {})
+    agent_config = AGENT_CONFIG.get(agent_key, {})
     agent_folder = agent_config.get("folder", "")
     commands_subdir = agent_config.get("commands_subdir", "commands")
 
@@ -2515,14 +2542,15 @@ def _install_orchestrate_commands(project_path: Path, agent: str, script_type: s
 
     commands_dir.mkdir(parents=True, exist_ok=True)
 
-    for cmd_name, description in ORCHESTRATE_COMMANDS.items():
-        cmd_path = commands_dir / f"{cmd_name}.md"
-        cmd_path.write_text(
-            f"---\ndescription: \"{description}\"\n---\n\n"
-            f"Run the `/speckit.{cmd_name}` orchestration command.\n\n"
-            f"$ARGUMENTS\n",
-            encoding="utf-8",
-        )
+    templates_dir = _resolve_templates_dir(project_path, "claude", "commands")
+
+    for filename in ORCHESTRATE_TEMPLATE_FILES:
+        src = templates_dir / filename
+        dst = commands_dir / filename
+        if src.exists():
+            shutil.copy2(src, dst)
+        else:
+            console.print(f"[yellow]Warning: orchestrate command template not found: {filename}[/yellow]")
 
 
 def main():

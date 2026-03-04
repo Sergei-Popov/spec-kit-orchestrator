@@ -7,6 +7,15 @@ Recent changes to the Specify CLI and templates are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.16] - 2026-03-04
+
+### Changed
+
+- Orchestrate slash commands now copy from template files instead of generating inline stubs
+- Agent prompt templates now copy from `templates/orchestrator/agents/` into project
+- `_install_orchestrate_commands` signature simplified to `(project_path, agent_key)`
+- `_install_orchestrator_templates` signature simplified to `(project_path)`
+
 ## [0.1.15] - 2026-03-04
 
 ### Changed
