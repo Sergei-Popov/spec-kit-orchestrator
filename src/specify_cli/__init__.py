@@ -2484,6 +2484,7 @@ Based on the project description, activate agents:
 
 <coordination_rules>
 - Update orchestrator-state.yml after EVERY state change.
+- Maintain `active_task_ids` in orchestrator-state.yml keyed by work-package ID so interrupted Task sessions can be resumed.
 - Never assign tasks outside an agent's capabilities.
 - Never skip review in supervised or semi-auto modes.
 - If Code Agent reports blocker → escalate to Architect.
@@ -2492,6 +2493,16 @@ Based on the project description, activate agents:
 - Semi-auto: pause after each phase.
 - Autonomous: pause only on CRITICAL findings or test failures.
 </coordination_rules>
+
+<user_checkpoints>
+You MUST halt and wait for user input at every checkpoint. Use this table:
+
+| Checkpoint | Trigger | Present To User | User Decision | Orchestrator Action |
+|------------|---------|-----------------|---------------|---------------------|
+| Package checkpoint | after each work package (supervised) | package summary, changed files, blockers | proceed / retry / stop | continue / rerun package / halt |
+| Phase checkpoint | after each phase (semi-auto and supervised) | phase summary table + risks | proceed / adjust plan / stop | continue / update plan+tasks / halt |
+| Review checkpoint | before merge / feature complete | review verdict and open findings | approve / request fixes / stop | complete / route fixes / halt |
+</user_checkpoints>
 
 <output_format>
 Status updates: [PHASE X/Y] [AGENT:role] [WP-NNN] outcome (1-2 sentences).
@@ -2544,8 +2555,16 @@ You are a Code Agent — an implementation specialist.
 Read before starting:
 1. `.specify/memory/constitution.md` — principles your code MUST follow
 2. `specs/{feature}/plan.md` — tech stack, patterns, file structure
-3. Your assigned work package in `agent-coordination.yml`
+3. `specs/{feature}/agent-coordination.yml` — assigned work package details
 </core_context>
+
+<template_inputs>
+This file is a prompt template. The orchestrator MUST replace:
+- `{DOMAIN}` — ownership boundary for this package
+- `{PHASE}` — active phase label/number
+- `{TASK_LIST}` — exact task lines copied from tasks.md
+- `{SPEC_FILES}` — explicit context files to read
+</template_inputs>
 
 <responsibilities>
 1. IMPLEMENT TASKS — Follow file markers: `(create: path)` for new files, `(update: path)` for edits, `(run: command)` for CLI. Match project coding style. Commit after each logical unit.
@@ -2560,9 +2579,13 @@ Read before starting:
 - Do NOT modify files from another agent's work package.
 - Do NOT refactor outside your scope — flag for Architect.
 - Run tests after EACH task.
+- If a required template input is missing, STOP and return `MISSING_CONTEXT`.
 </constraints>
 
 <output_format>
+Return using this exact structure:
+Domain: {DOMAIN}
+Phase: {PHASE}
 Per task: [TASK N] DONE — Created/Updated path — summary.
 Per package: [WP-NNN] COMPLETE — N/N tasks — file list.
 Blocker: [TASK N] BLOCKED — cause — escalate to [role].
@@ -2580,7 +2603,16 @@ Read before writing tests:
 2. `specs/{feature}/plan.md` — testing framework and conventions
 3. `specs/{feature}/contracts/api-spec.json` — API contracts (if exists)
 4. Completed source files from Code Agent packages
+5. `specs/{feature}/agent-coordination.yml` — package under test
 </core_context>
+
+<template_inputs>
+The orchestrator MUST replace:
+- `{DOMAIN}`
+- `{PHASE}`
+- `{TASK_LIST}`
+- `{SPEC_FILES}`
+</template_inputs>
 
 <responsibilities>
 1. GENERATE TESTS — Unit tests for business logic. Integration tests for API endpoints. Contract tests for API spec. Edge case tests from acceptance criteria.
@@ -2595,9 +2627,12 @@ Read before writing tests:
 - Follow testing framework from plan.md.
 - One primary assertion per unit test.
 - Do NOT modify source code — report issues to Code Agent.
+- If template inputs are incomplete, return `MISSING_CONTEXT`.
 </constraints>
 
 <output_format>
+Domain: {DOMAIN}
+Phase: {PHASE}
 Creation: [TEST] Created path — N cases for [component].
 Results: table with Suite, Pass, Fail, Skip, Coverage columns.
 Failure: [FAIL] test_name — expected X, got Y — likely cause.
@@ -2616,7 +2651,16 @@ Read before reviewing:
 3. `specs/{feature}/plan.md` — architecture and tech stack
 4. `specs/{feature}/contracts/` — API contracts (if exist)
 5. Source code and tests from the target work package
+6. `specs/{feature}/agent-coordination.yml` — package ownership and dependencies
 </core_context>
+
+<template_inputs>
+The orchestrator MUST replace:
+- `{DOMAIN}`
+- `{PHASE}`
+- `{TASK_LIST}`
+- `{SPEC_FILES}`
+</template_inputs>
 
 <responsibilities>
 1. CODE REVIEW — Constitution compliance, spec compliance, code quality, security (injection, XSS, auth bypass), error handling and edge cases.
@@ -2631,9 +2675,12 @@ Read before reviewing:
 - Never approve code with CRITICAL findings.
 - Do NOT rewrite code — describe the fix with file and line reference.
 - Review against the spec, not personal preference.
+- If required template inputs are missing, return `MISSING_CONTEXT`.
 </constraints>
 
 <output_format>
+Domain: {DOMAIN}
+Phase: {PHASE}
 ## Review: WP-NNN — [APPROVE | REQUEST_CHANGES]
 Round: N/3
 
@@ -2992,6 +3039,12 @@ Read in this order before any action:
 2. `.specify/orchestrator/orchestrator-config.yml` — team configuration
 3. `.specify/orchestrator/agents/*.md` — base agent templates
 
+Use `provider_capabilities` from orchestrator-config.yml as the source of truth for:
+- allowed subagent types
+- task execution tool name
+- task session ID field
+- registered slash commands
+
 ## Your Workflow
 
 Execute ALL steps sequentially. Do not stop between steps.
@@ -3038,6 +3091,7 @@ work_packages:
   WP-001:
     title: "{title}"
     agent: "{role}"
+    subagent_type: general
     tasks: [T001, T002, T003]
     dependencies: []
     phase: 1
@@ -3048,6 +3102,8 @@ execution_phases:
     packages: [WP-001, WP-002]
     type: sequential
 ```
+
+`subagent_type` MUST be selected from `provider_capabilities.subagent_types`.
 
 ### Step 7 — Create Project-Specific Agent Files
 
@@ -3091,7 +3147,23 @@ the following handoffs in YAML frontmatter:
 
 Use `send: false` for all these handoffs so users can review and adjust prompts before sending.
 
-### Step 8 — Present Summary
+### Step 8 — Initialize State Tracking
+
+Create `specs/001-{feature-name}/orchestrator-state.yml`:
+```yaml
+feature: "{feature-name}"
+mode: "{mode}"
+current_phase: "phase-1"
+work_packages: {}
+active_task_ids: {}
+next_action: "Describe the next verified user action"
+```
+
+Rules:
+- Never output `next_command` unless it exists in `provider_capabilities.registered_slash_commands`.
+- Store each Task result ID in `active_task_ids` for resumability.
+
+### Step 9 — Present Summary
 
 Show the user:
 
@@ -3114,7 +3186,9 @@ Show the user:
 | ... | ... | ... |
 
 ### Next Step
-Review artifacts in `specs/001-{feature-name}/`, then run `/speckit.orchestrate-run`
+Review artifacts in `specs/001-{feature-name}/`.
+If `speckit.orchestrate-run` is in `provider_capabilities.registered_slash_commands`,
+you may suggest it as `next_command`; otherwise set only `next_action` with plain-English guidance.
 
 ## Agent Activation Rules
 
@@ -3348,6 +3422,9 @@ Read the user's description and determine:
 - How many Code Agents are needed (1 per major domain, max 3)
 - Whether a Test Agent is needed (yes if: API, database, or user mentions testing)
 
+Read `.specify/orchestrator/orchestrator-config.yml` and load `provider_capabilities`.
+Only use subagent types and tool names listed there when generating artifacts.
+
 ## Step 2 — Generate Constitution
 
 Read `.specify/templates/constitution-template.md` for the template format.
@@ -3382,6 +3459,11 @@ Use markers: `(create: path)`, `(update: path)`, `(run: command)`, `[P]`, `[US*]
 
 Create `specs/001-feature-name/agent-coordination.yml` with work packages
 grouped by domain, assigned to agent roles, ordered by dependency.
+
+Each work package MUST include a provider-valid `subagent_type`.
+If `provider_capabilities.subagent_types` is present, pick values only from that list
+(for OpenCode: `general` or `explore`; use `general` for implementation/review/testing
+and `explore` for research-only packages).
 
 ## Step 7 — CREATE CUSTOMIZED SUB-AGENT FILES
 
@@ -3569,8 +3651,28 @@ Update `.specify/orchestrator/orchestrator-config.yml` with:
 - The feature name
 - The actual agent team (roles, counts, assigned domains)
 - References to the created agent file paths
+- Confirmed provider capability values used in generated coordination artifacts
 
-## Step 9 — Present Summary
+## Step 9 — Initialize orchestration-state.yml
+
+Create `specs/001-feature-name/orchestrator-state.yml` with at least:
+
+```yaml
+feature: "001-feature-name"
+mode: "{mode}"
+current_phase: "phase-1"
+work_packages: {}
+active_task_ids: {}
+next_action: "Describe the verified next manual action for the user"
+```
+
+Rules:
+- Never write `next_command` unless it is explicitly listed in
+  `provider_capabilities.registered_slash_commands`.
+- If no verified slash command exists for continuation, use `next_action` only.
+- Track Task session IDs in `active_task_ids` as `{work_package_id}: {task_id}`.
+
+## Step 10 — Present Summary
 
 Show the user:
 ## Orchestration Initialized
@@ -3596,9 +3698,18 @@ Show the user:
 ### How to Run
 
 1. Review the generated artifacts in `specs/001-feature-name/`
-2. Start execution: `/speckit.orchestrate-run`
-3. The orchestrator will guide you through each phase and tell you
-   when to switch to a specific sub-agent.
+2. If `speckit.orchestrate-run` exists in `provider_capabilities.registered_slash_commands`,
+   you may suggest it as the next command.
+3. Otherwise provide a plain-English `next_action` that tells the user exactly how to continue.
+4. The orchestrator must halt at checkpoints and wait for user decisions.
+
+### User Checkpoints (must halt and ask)
+
+| Trigger Phase | Summary Presented | User Decision | Orchestrator Action |
+|---------------|-------------------|---------------|---------------------|
+| End of each work package (supervised mode) | completed tasks, changed files, blockers | proceed / retry / stop | continue / rerun package / halt |
+| End of each phase | phase progress table and risks | proceed / adjust / stop | continue / revise plan+tasks / halt |
+| Before merge / completion | review verdict and unresolved findings | approve / request fixes / stop | mark complete / route fixes / halt |
 
 $ARGUMENTS
 """
@@ -3616,9 +3727,12 @@ You are the Orchestrator Agent. Read your full role definition from:
 Read the execution plan:
 - `specs/{active_feature}/agent-coordination.yml`
 - `.specify/orchestrator/orchestrator-config.yml`
+- `provider_capabilities` from orchestrator-config.yml (for valid subagent_type and task_id handling)
 
 If `specs/{active_feature}/orchestrator-state.yml` exists, find the last
 completed work package and resume from the next one.
+If `active_task_ids` contains an entry for an in-progress package, resume that Task
+session using `provider_capabilities.task_id_field` instead of starting fresh.
 
 Execute the plan phase by phase. For EACH work package, you must:
 
@@ -3662,6 +3776,7 @@ After the user confirms the sub-agent completed the work package:
 
 - Record the result in `specs/{active_feature}/orchestrator-state.yml`
 - Update the work package status to completed
+- Save the Task session ID under `active_task_ids[{WP-ID}]` while running; clear it when completed
 - Check if the next work package's dependencies are all met
 - If this was the last package in a phase, run the phase checkpoint:
 
@@ -3681,6 +3796,8 @@ Next phase: {N+1} — {next_phase_name}
 - Supervised: Ask "Approve phase and continue? (yes / retry WP-NNN / abort)"
 - Semi-auto: Ask "Continue to next phase? (yes / abort)"
 - Autonomous: Continue immediately unless test failures exist
+
+You MUST halt and wait for user input at each checkpoint; do not proceed autonomously after asking.
 
 ### 4. Handle Parallel Packages
 If the current phase has packages marked parallel, tell the user:
@@ -3863,6 +3980,21 @@ def _generate_orchestrator_config(project_path: Path, mode: str, team: dict, fea
             "after_phase": True,
             "after_work_package": False,
             "before_merge": True,
+        },
+        "provider_capabilities": {
+            "subagent_types": [
+                {
+                    "name": "general",
+                    "description": "Full tool access — reads, writes, runs commands, calls APIs",
+                },
+                {
+                    "name": "explore",
+                    "description": "Read-only codebase research",
+                },
+            ],
+            "task_tool": "Task",
+            "task_id_field": "task_id",
+            "registered_slash_commands": [],
         },
         "quality_gates": {
             "min_test_coverage": 80,

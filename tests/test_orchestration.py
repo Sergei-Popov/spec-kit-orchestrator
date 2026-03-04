@@ -22,6 +22,7 @@ from specify_cli import (
     ORCHESTRATE_COMMANDS,
     ORCHESTRATE_TEMPLATE_FILES,
     ORCH_PROMPT_INIT,
+    ORCH_PROMPT_RUN,
     app,
 )
 
@@ -283,3 +284,47 @@ class TestOrchestrateInitDynamicAgentInstructions:
         assert 'label: "🧪 Run Tests"' in ORCH_PROMPT_INIT
         assert 'label: "🔍 Request Review"' in ORCH_PROMPT_INIT
         assert 'label: "⚙ Send Fixes to Code Backend"' in ORCH_PROMPT_INIT
+
+
+class TestOpenCodeOrchestrationRegression:
+    def test_generated_config_exposes_provider_capabilities(self, project_dir):
+        team = {"architect": 1, "code": 1, "test": 1, "review": 1}
+        _generate_orchestrator_config(project_dir, "supervised", team)
+        config_path = project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml"
+        data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+
+        capabilities = data["provider_capabilities"]
+        assert capabilities["task_tool"] == "Task"
+        assert capabilities["task_id_field"] == "task_id"
+        assert [item["name"] for item in capabilities["subagent_types"]] == ["general", "explore"]
+
+    def test_init_prompt_requires_verified_next_command_or_next_action(self):
+        assert "Never write `next_command` unless it is explicitly listed in" in ORCH_PROMPT_INIT
+        assert "use `next_action` only" in ORCH_PROMPT_INIT
+        assert "active_task_ids: {}" in ORCH_PROMPT_INIT
+
+    def test_init_prompt_requires_provider_valid_subagent_types(self):
+        assert "subagent_type" in ORCH_PROMPT_INIT
+        assert "for OpenCode: `general` or `explore`" in ORCH_PROMPT_INIT
+
+    def test_code_agent_template_uses_required_placeholders(self, project_dir):
+        _install_orchestrator_templates(project_dir)
+        code_template = (
+            project_dir / ".specify" / "orchestrator" / "agents" / "code.md"
+        ).read_text(encoding="utf-8")
+
+        for placeholder in ("{DOMAIN}", "{PHASE}", "{TASK_LIST}", "{SPEC_FILES}"):
+            assert placeholder in code_template
+
+    def test_orchestrator_template_defines_checkpoint_table_and_halt(self, project_dir):
+        _install_orchestrator_templates(project_dir)
+        orchestrator_template = (
+            project_dir / ".specify" / "orchestrator" / "agents" / "orchestrator.md"
+        ).read_text(encoding="utf-8")
+
+        assert "| Checkpoint | Trigger | Present To User | User Decision | Orchestrator Action |" in orchestrator_template
+        assert "You MUST halt and wait for user input at every checkpoint." in orchestrator_template
+
+    def test_run_prompt_requires_task_id_resume_tracking(self):
+        assert "active_task_ids" in ORCH_PROMPT_RUN
+        assert "provider_capabilities.task_id_field" in ORCH_PROMPT_RUN
