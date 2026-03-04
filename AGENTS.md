@@ -416,4 +416,33 @@ When adding new agents:
 
 ---
 
+## Orchestration Command Support
+
+When a project is initialized with `--orchestrate`, 6 additional slash command files are installed into the agent's command directory alongside the standard 8:
+
+| Command File | Purpose |
+|-------------|---------|
+| `speckit.orchestrate.init.md` | Configure agent team and autonomy mode |
+| `speckit.orchestrate.assign.md` | Generate work packages from tasks |
+| `speckit.orchestrate.run.md` | Execute coordination plan |
+| `speckit.orchestrate.status.md` | Display orchestration progress |
+| `speckit.orchestrate.review.md` | Trigger cross-agent review cycle |
+| `speckit.orchestrate.sync.md` | Resolve conflicts from parallel agents |
+
+These files are installed by `_install_orchestrate_commands()` in `__init__.py`, which uses the same `AGENT_CONFIG` lookup pattern as standard command installation. When adding a new agent, orchestration commands will be installed automatically as long as the agent's `folder` and `commands_subdir` are correctly defined in `AGENT_CONFIG`.
+
+### Orchestrator Templates
+
+Agent prompt templates are stored in `.specify/orchestrator/agents/` and are agent-agnostic (they work with any supported AI assistant):
+
+| Template | Role |
+|----------|------|
+| `orchestrator.md` | Project manager — distributes work, tracks state |
+| `architect.md` | Technical lead — architecture review, refactoring plans |
+| `code.md` | Implementation specialist — writes code per task list |
+| `test.md` | QA specialist — generates and runs tests |
+| `review.md` | Senior reviewer — code review, quality gates |
+
+---
+
 *This documentation should be updated whenever new agents are added to maintain accuracy and completeness.*

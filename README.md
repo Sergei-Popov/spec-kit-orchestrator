@@ -133,6 +133,43 @@ Use **`/speckit.implement`** to execute all tasks and build your feature accordi
 
 For detailed step-by-step instructions, see our [comprehensive guide](./spec-driven.md).
 
+### 🤖 Multi-Agent Orchestration (Optional)
+
+For complex features, you can distribute work across specialized AI agents instead of using single-agent `/speckit.implement`.
+
+#### Enable orchestration during project init
+
+```bash
+specify init my-project --ai copilot --orchestrate
+```
+
+#### Or add it to an existing spec-kit project
+
+```text
+/speckit.orchestrate.init
+```
+
+#### Orchestrated workflow (after /speckit.tasks)
+
+```text
+/speckit.orchestrate.init      →  Configure team and autonomy mode
+/speckit.orchestrate.assign    →  Generate work packages from tasks
+/speckit.orchestrate.run       →  Execute with sub-agents
+/speckit.orchestrate.status    →  Monitor progress (anytime)
+/speckit.orchestrate.review    →  Cross-agent review cycle
+/speckit.orchestrate.sync      →  Merge parallel agent outputs
+```
+
+**Three autonomy modes:**
+
+- **Supervised** — human approves every work package
+- **Semi-auto** — human approves each phase, agents execute within it
+- **Autonomous** — full auto with review checkpoints
+
+**Four agent roles:** Architect (architecture review, data model validation), Code (implementation, supports multiple parallel instances), Test (test generation and execution), Review (code review, spec compliance, quality gates).
+
+Orchestration is fully opt-in. Without `--orchestrate`, the standard spec-kit experience is unchanged.
+
 ## 📽️ Video Overview
 
 Want to see Spec Kit in action? Watch our [video overview](https://www.youtube.com/watch?v=a9eR1xsfvHg&pp=0gcJCckJAYcqIYzv)!
@@ -164,6 +201,8 @@ Want to see Spec Kit in action? Watch our [video overview](https://www.youtube.c
 | [Antigravity (agy)](https://agy.ai/)                                                 | ✅      |                                                                                                                                           |
 | Generic                                                                              | ✅      | Bring your own agent — use `--ai generic --ai-commands-dir <path>` for unsupported agents                                                 |
 
+> **Note:** All agents listed above support the orchestration feature. When `--orchestrate` is used, 6 additional `/speckit.orchestrate.*` commands are installed alongside the standard commands.
+
 ## 🔧 Specify CLI Reference
 
 The `specify` command supports the following options:
@@ -191,6 +230,7 @@ The `specify` command supports the following options:
 | `--debug`              | Flag     | Enable detailed debug output for troubleshooting                                                                                                                                             |
 | `--github-token`       | Option   | GitHub token for API requests (or set GH_TOKEN/GITHUB_TOKEN env variable)                                                                                                                    |
 | `--ai-skills`          | Flag     | Install Prompt.MD templates as agent skills in agent-specific `skills/` directory (requires `--ai`)                                                                                          |
+| `--orchestrate`        | Flag     | Enable multi-agent orchestration mode                                                                                                                                                        |
 
 ### Examples
 
