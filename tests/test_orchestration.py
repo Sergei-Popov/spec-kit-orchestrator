@@ -170,16 +170,23 @@ class TestInstallOrchestrateCommands:
         commands_dir = project_dir / ".claude" / "commands"
         assert not list(commands_dir.glob("speckit.orchestrate.*.agent.md"))
 
-    def test_copilot_no_orchestrate_agent_roles_in_agents_dir(self, project_dir):
+    def test_copilot_orchestrate_agent_roles_in_agents_dir(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
         agents_dir = project_dir / ".github" / "agents"
-        assert not agents_dir.exists() or not list(agents_dir.glob("speckit.orchestrate.*.agent.md"))
+        agent_files = list(agents_dir.glob("speckit.orchestrate-*.agent.md"))
+        assert len(agent_files) == 3
 
     def test_copilot_action_prompts_in_prompts_dir(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
         prompts_dir = project_dir / ".github" / "prompts"
         prompt_files = list(prompts_dir.glob("speckit.orchestrate-*.prompt.md"))
         assert len(prompt_files) == 3
+
+    def test_copilot_agent_frontmatter_includes_mode(self, project_dir):
+        _install_orchestrate_commands(project_dir, "copilot")
+        agent_path = project_dir / ".github" / "agents" / "speckit.orchestrate-init.agent.md"
+        content = agent_path.read_text(encoding="utf-8")
+        assert "mode: speckit.orchestrate-init" in content
 
     def test_gemini_uses_commands_subdir(self, project_dir):
         _install_orchestrate_commands(project_dir, "gemini")
@@ -234,7 +241,7 @@ class TestEmbeddedContentWrittenWithoutTemplateFiles:
     def test_no_agent_files_written_in_empty_project(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
         agents_dir = project_dir / ".github" / "agents"
-        assert not agents_dir.exists() or not list(agents_dir.glob("speckit.orchestrate.*.agent.md"))
+        assert len(list(agents_dir.glob("speckit.orchestrate-*.agent.md"))) == 3
 
     def test_prompt_files_written_in_empty_project(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
@@ -254,7 +261,5 @@ class TestEmbeddedContentWrittenWithoutTemplateFiles:
 
         assert (project_dir / ".specify" / "orchestrator" / "orchestrator-config.yml").exists()
         assert len(list((project_dir / ".specify" / "orchestrator" / "agents").glob("*.md"))) == 5
-        assert not (project_dir / ".github" / "agents").exists() or not list(
-            (project_dir / ".github" / "agents").glob("speckit.orchestrate.*.agent.md")
-        )
+        assert len(list((project_dir / ".github" / "agents").glob("speckit.orchestrate-*.agent.md"))) == 3
         assert len(list((project_dir / ".github" / "prompts").glob("speckit.orchestrate-*.prompt.md"))) == 3

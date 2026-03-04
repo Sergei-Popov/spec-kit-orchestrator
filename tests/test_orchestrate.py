@@ -147,10 +147,10 @@ class TestAgentPromptTemplatesInstalled:
 # ===== Test 6: slash commands installed for copilot =====
 
 class TestSlashCommandsCopilot:
-    def test_copilot_no_orchestrate_agent_roles_installed(self, project_dir):
+    def test_copilot_orchestrate_agent_roles_installed(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
         agents_dir = project_dir / ".github" / "agents"
-        assert not agents_dir.exists() or not list(agents_dir.glob("speckit.orchestrate.*.agent.md"))
+        assert len(list(agents_dir.glob("speckit.orchestrate-*.agent.md"))) == 3
 
     def test_copilot_action_prompts_installed(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
@@ -164,13 +164,12 @@ class TestSlashCommandsCopilot:
         for filename in expected:
             assert (prompts_dir / filename).exists(), f"{filename} not found"
 
-    def test_copilot_no_action_files_in_agents_dir(self, project_dir):
+    def test_copilot_agent_files_have_mode_frontmatter(self, project_dir):
         _install_orchestrate_commands(project_dir, "copilot")
-        # init/run/status must NOT be in .github/agents/
         agents_dir = project_dir / ".github" / "agents"
         for name in ("init", "run", "status"):
-            assert not (agents_dir / f"speckit.orchestrate.{name}.md").exists()
-            assert not (agents_dir / f"speckit.orchestrate.{name}.agent.md").exists()
+            content = (agents_dir / f"speckit.orchestrate-{name}.agent.md").read_text(encoding="utf-8")
+            assert f"mode: speckit.orchestrate-{name}" in content
 
 
 # ===== Test 7: slash commands installed for claude =====
