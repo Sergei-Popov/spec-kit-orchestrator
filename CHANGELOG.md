@@ -7,6 +7,23 @@ Recent changes to the Specify CLI and templates are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.18] - 2026-03-04
+
+### Changed
+
+- Redesigned orchestration system to manage the full spec-kit lifecycle
+- Replaced 6 narrow orchestrate commands with 3 lifecycle commands (init, run, status)
+- `speckit.orchestrate.init` now analyzes projects, activates agents, and sets up the entire spec-kit flow
+- `speckit.orchestrate.run` now includes a full execution engine with state management
+- `speckit.orchestrate.status` now directs users to run init (not run) when no state exists
+- Expanded Orchestrator Agent prompt with lifecycle phases and agent activation rules
+
+### Removed
+
+- `speckit.orchestrate.assign` command (merged into orchestrate.init)
+- `speckit.orchestrate.review` command (merged into orchestrate.run)
+- `speckit.orchestrate.sync` command (merged into orchestrate.run)
+
 ## [0.1.17] - 2026-03-04
 
 ### Fixed
