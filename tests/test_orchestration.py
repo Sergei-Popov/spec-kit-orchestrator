@@ -155,14 +155,13 @@ class TestInstallOrchestrateCommands:
         for cmd_file in commands_dir.glob("speckit.orchestrate-*.prompt.md"):
             content = cmd_file.read_text(encoding="utf-8")
             command_name = cmd_file.name.replace(".prompt.md", "")
-            agent_line = next(line for line in content.splitlines() if line.startswith("agent: "))
-            name_line = next(line for line in content.splitlines() if line.startswith("name: "))
+            lines = content.splitlines()
+            agent_line = next(line for line in lines if line.startswith("agent: "))
+            name_line = next(line for line in lines if line.startswith("name: "))
             assert len(content) > 0
             assert "$ARGUMENTS" in content
-            assert f"agent: {command_name}" in content
-            assert "name:" in content
+            assert agent_line == f"agent: {command_name}"
             assert name_line == f"name: '{command_name}'"
-            assert agent_line.removeprefix("agent: ") == name_line.removeprefix("name: '").removesuffix("'")
             assert "description:" in content
 
     def test_prompt_names_match_template_list(self, project_dir):
